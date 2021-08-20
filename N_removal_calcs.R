@@ -46,6 +46,9 @@
 #'  
 #'  **N.REM** Nitrogen removal value, kg_ha_yr
 #'  
+#'  ## Conversions
+#'  1 square kilometers (skm) = 100 hectare (Ha)
+#'  
 #' ## References
 #'  
 #'  [1] Cheng et al. (2020) https://doi.org/10.1038/s41586-020-03042-5
@@ -54,12 +57,15 @@
 #'  
 #'  [3] Byrnes et al. TREND data
 #'  
+#'  [4] Wu and Lane (2017)
+#'  
 
 setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files")
 
 library(sf)
-library(lhc)
+#library(lhc)
 
+start_time <- Sys.time()   # check to see how long the code takes to run at the end
  
 #' ## Part 1: Wetland area
 #' Pull in a shapefile of wetland area for one HUC8 watershed, 
@@ -74,6 +80,7 @@ wetlands_select <- wetlands[which(wetlands$WETLAND_TY == "Freshwater Emergent We
                                     wetlands$WETLAND_TY == "Other"),]
 wetlands <- wetlands_select$ACRES  # area in acres
 wetlands_skm <- wetlands/247.105   # wetland areas in square km
+wetlands_m2 <- wetlands_skm*1000000
 rm(wetlands, wetlands_select)
 
 #' Also retrieve HUC8 area
@@ -87,7 +94,30 @@ rm(watershed)
 
 data <- read.csv("N_surplus_toy.csv")
 data$HUC_name <- ifelse(data$HUC8>9999999, paste("HU8_", data$HUC8, sep = ""), paste("HU8_0", data$HUC8, sep = ""))
-N.IN <- data$Nsurplus_Kg_ha_yr[1]
+N_SUR_kg_ha_yr <- data$Nsurplus_Kg_ha_yr[1]
 
+# Calculate N surplus within the watershed of givin area
+
+N.IN <- N_SUR_kg_ha_yr*watershed_skm*100  ## kg nitrogen entering the watershed each year
+
+#' ## Part 3: Calculate coefficients
+#' Pull in literature values
+#' These will be replaced with ranges in the hypercube method
+
+TAU = 1.51 * wetlands_m2 ^ 0.23  # coefficients from [2] eq. 13 (Table 4)
+K   = 0.38 * TAU ^ -0.91  # coefficients from [2] figure 3A
+CA  = wetlands_m2 / 0.14    # from [4]
+Rp_wetland = (1-exp(-K*TAU))*100  ## this is percent 
+
+
+
+
+
+
+
+
+
+end_time <- Sys.time()
+end_time - start_time
 
            
