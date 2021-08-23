@@ -67,33 +67,23 @@
 #'  [3] Byrnes et al. TREND data
 #'  
 #'  [4] Wu and Lane (2017)
-#'  
 
 
 #SetUp
-
-
 setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files")
-
 library(sf)
-#library(lhc)
 
 
 #' ## STEP 1: Read in Nitrogen input data
 #' This step is also used to generate an index of all HUCs in the data set
 
-data <- read.csv("N_surplus_toy.csv")
+data <- read.csv("N_surplus_LEB-US.csv")
 data$HUC_name <- ifelse(data$HUC8>9999999, paste("HU8_", data$HUC8, sep = ""), paste("HU8_0", data$HUC8, sep = ""))
-## HUC_name is the INDEX
+## we will use HUC_name as a unique index for each watershed
 
-### For 1 run purpose <- eventually replace this line with an apply function or loop
-#
-###
-#
-INDEX <- data$HUC_name
-#
-###
-#
+INDEX <- data$HUC_name   # list of all the watersheds in the dataset
+
+#INDEX <- data$HUC_name[1]  # to run the code for just the first HUC in the list
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -109,16 +99,20 @@ c1 <- 0.31     # coefficients from [2] figure 3A
 c2 <- 0.45
 d1 <- -0.86
 d2 <- -0.7
-alpha1 <- .03
+alpha1 <- .03  # this is the wetland to contributing area ratio [4]
 alpha2 <- 0.2 
 gamma1 <- 0.3  # catchment to area ratio
 gamma2 <- 0.5
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
+#' The function 'RemovalsPerHUC8' is used to calculate the N removal of each
+#' wetland within a HUC8 watershed, based on its size, which can then be 
+#' aggregated over the entire watershed
 
 RemovalsPerHUC8 <- function(INDEX, data){
   
+  # Call in the N surplus value for the HUC
   N_SUR_kg_ha_yr <- data$Nsurplus_Kg_ha_yr[which(data$HUC_name == INDEX)]
   
   
@@ -134,8 +128,7 @@ RemovalsPerHUC8 <- function(INDEX, data){
                                       wetlands$WETLAND_TY == "Freshwater Forested/Shrub Wetland" |
                                       wetlands$WETLAND_TY == "Freshwater Pond" |
                                       wetlands$WETLAND_TY == "Other"),]
-  wetlands <- wetlands_select$ACRES  # area in acres
-  wetlands_m2 <- wetlands/247.105*1000000   # wetland areas in m2
+  wetlands_m2 <- wetlands_select$ACRES/247.105*1000000  # wetland areas in m2
   wetlands_ha <- wetlands_m2/10000 # wetland areas in m2
   rm(wetlands, wetlands_select)
   
@@ -144,35 +137,44 @@ RemovalsPerHUC8 <- function(INDEX, data){
   
   watershed_ha <- watershed$AREASQKM*100 #HUC8 watershed area in square km _> hectare
   
-  # Calculate N surplus within the watershed of givin area
+  # Calculate N surplus within the entire watershed
   N.IN_watershed <- N_SUR_kg_ha_yr*watershed_ha  ## kg nitrogen entering the watershed each year
   
   
   
   #' STEP 3 + 4: Determine K and T and N removal using n = 250 Monte Carlo simulations
   
-  num_sim =250
+  num_sim <- 250  # number of Monte Carlo simulations to run
   wetlands_HUC <- as.data.frame(wetlands_m2)
   
+  # Generate 250  Tau values for each wetland in the watershed based on random selection
+  # of coefficients within excepted ranges
   TAU_MC <- replicate(num_sim, apply(wetlands_HUC, 1, function(x) runif(1, a1, a2) 
                                      * x[1] ^ runif(1, b1 , b2)))
-  
+  # Similarly generate 250 random coefficient sets for K, use to generate K from Tau
   K_MC_ex <- replicate(num_sim, runif(length(wetlands_m2), d1, d2))
   K_MC_const <-  replicate(num_sim, runif(length(wetlands_m2), c1, c2))
   K_MC <- K_MC_const*(TAU_MC ^ K_MC_ex)
   
-  R_MC <- 1-exp(-1*(TAU_MC * K_MC))
+  R_MC <- 1-exp(-1*(TAU_MC * K_MC))  # Proporation of N removal - Eq.2 [1]
   
   remove(TAU_MC, K_MC, K_MC_ex, K_MC_const)
   
-  CA_MC  <- replicate(num_sim,  wetlands_ha / runif(1, alpha1, alpha2))
+  # Determine the approximate contributing area of each wetland (in hectares)
+  CA_MC  <- replicate(num_sim,  wetlands_ha / runif(1, alpha1, alpha2)) 
   
-  ## comment this
+  ## This code is a normalization of the Contributing Area that will rescale it
+  ## if, and only if, total CA exceeds the area of the total watershed
   CA_RATIO <- colSums(CA_MC) / watershed_ha
   CA_RATIO[CA_RATIO<1] <- 1  
   CA_MC <- CA_MC / CA_RATIO
   
+  ## Gamma, "reduction factor", is the proportion of N within the CA that enters the wetland --
+  ## Gamma is an approximation drawn from the literature and accounts for things like 
+  ## N that may have been denitrified upstream of the wetland or retained in soils
   gamma_matrix <- replicate(num_sim, runif(length(wetlands_m2), gamma1, gamma2))
+  
+  # Nitrogen in kg/yr that enters each wetland
   N.IN_wetland_MC <- (N_SUR_kg_ha_yr * CA_MC * gamma_matrix)
   
   R_wetland_kg_yr_MC <- N.IN_wetland_MC * R_MC # this is the N removal of each wetlands in Kg
@@ -185,6 +187,9 @@ RemovalsPerHUC8 <- function(INDEX, data){
   
   #Ra_HUC <- colSums(R_MC * N.IN_wetland_MC)
   
+  ## summary statistics generated from the 250 simulations
+  ## for both WeightedRp, the proportion of N removed by wetlands
+  ## and R_HUC_Kg_yr_MC, the total N removed per hectare
   OUTPUT <- data.frame(INDEX, NumWet = nrow(wetlands_HUC), 
                        sum_wetSA = sum(wetlands_HUC[1]), sum_CA = median(colSums(CA_MC)),
                        Rp5  = quantile(WeightedRp, 0.05),
@@ -194,13 +199,13 @@ RemovalsPerHUC8 <- function(INDEX, data){
                        Rp95 = quantile(WeightedRp, 0.95),
                        MeanRp = mean(WeightedRp), 
                        sdRp = sd(WeightedRp),
-                       Ra5  = quantile(R_HUC_kg_yr_MC, 0.05),
-                       Ra25 = quantile(R_HUC_kg_yr_MC, 0.25),
-                       Ra50 = quantile(R_HUC_kg_yr_MC, 0.50),
-                       Ra75 = quantile(R_HUC_kg_yr_MC, 0.75),
-                       Ra95 = quantile(R_HUC_kg_yr_MC, 0.95),
-                       MeanRa = mean(R_HUC_kg_yr_MC), 
-                       sdRa = sd(R_HUC_kg_yr_MC))
+                       Ra5  = quantile(R_HUC_kg_ha_yr_MC, 0.05),
+                       Ra25 = quantile(R_HUC_kg_ha_yr_MC, 0.25),
+                       Ra50 = quantile(R_HUC_kg_ha_yr_MC, 0.50),
+                       Ra75 = quantile(R_HUC_kg_ha_yr_MC, 0.75),
+                       Ra95 = quantile(R_HUC_kg_ha_yr_MC, 0.95),
+                       MeanRa = mean(R_HUC_kg_ha_yr_MC), 
+                       sdRa = sd(R_HUC_kg_ha_yr_MC))
   
   }
 
