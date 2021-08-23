@@ -1,7 +1,7 @@
 
 #' # Wetland Nitrogen Removal Calculations
 
-#' ### Last update: 2021-08-20
+#' ### Last update: 2021-08-23
 
 #' This script is based on the analysis by [1] Cheng et al. (2020) *Nature* 
 #' The purpose is to estimate N removal by wetlands for a watershed (size
