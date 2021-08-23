@@ -78,9 +78,6 @@ setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_
 library(sf)
 #library(lhc)
 
-start_time <- Sys.time()   # check to see how long the code takes to run at the end
- 
-
 
 #' ## STEP 1: Read in Nitrogen input data
 #' This step is also used to generate an index of all HUCs in the data set
@@ -98,42 +95,9 @@ INDEX <- data$HUC_name
 ###
 #
 
-N_SUR_kg_ha_yr <- data$Nsurplus_Kg_ha_yr[which(data$HUC_name == INDEX)]
-
-
-
-#' ## STEP 2: Read in Wetland and watershed shapefiles using index created in STEP 1
-#' This step also generates a list of wetland areas and finds the area of the entire watershed
-
-DataWD <- "C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files/Wetland_shapefiles/"
-
-wetlands <- st_read(paste(DataWD, INDEX, '_Watershed/', INDEX, '_wetlands.shp', sep = ""))
-
-## Filter by wetland type
-wetlands_select <- wetlands[which(wetlands$WETLAND_TY == "Freshwater Emergent Wetland" | 
-                                    wetlands$WETLAND_TY == "Freshwater Forested/Shrub Wetland" |
-                                    wetlands$WETLAND_TY == "Freshwater Pond" |
-                                    wetlands$WETLAND_TY == "Other"),]
-wetlands <- wetlands_select$ACRES  # area in acres
-wetlands_m2 <- wetlands/247.105*1000000   # wetland areas in m2
-wetlands_ha <- wetlands_m2/10000 # wetland areas in m2
-rm(wetlands, wetlands_select)
-
-#' Also retrieve HUC8 area
-watershed <- st_read(paste(DataWD, INDEX, '_Watershed/', INDEX, '_watershed.shp', sep = ""))
-
-watershed_ha <- watershed$AREASQKM*100 #HUC8 watershed area in square km _> hectare
-
-# Calculate N surplus within the watershed of givin area
-N.IN_watershed <- N_SUR_kg_ha_yr*watershed_ha  ## kg nitrogen entering the watershed each year
-
-
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-#' ## Monte Carlo
-
-#####  redo Part 3 + 4 in a Monte Carlo framework --
+#####  Coefficient ranges for use in Monte Carlo framework --
 ## using a range of estimates for each variable
 ## these are all found in Extended Data Table 2 [1]
 
@@ -151,24 +115,54 @@ gamma1 <- 0.3  # catchment to area ratio
 gamma2 <- 0.5
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Perform Monte Carlo Simulations for each HUC ----------------------------------------------------
-# Generate a set of n values for tau, k, CA, R for each wetland -----------------------------------
 
 
-RemovalsPerHUC8 <- function(INDEX, wetlands_df, HUC_Boundary_df){
+RemovalsPerHUC8 <- function(INDEX, data){
+  
+  N_SUR_kg_ha_yr <- data$Nsurplus_Kg_ha_yr[which(data$HUC_name == INDEX)]
+  
+  
+  #' ## STEP 2: Read in Wetland and watershed shapefiles using index created in STEP 1
+  #' This step also generates a list of wetland areas and finds the area of the entire watershed
+  
+  DataWD <- "C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files/Wetland_shapefiles/"
+  
+  wetlands <- st_read(paste(DataWD, INDEX, '_Watershed/', INDEX, '_wetlands.shp', sep = ""))
+  
+  ## Filter by wetland type
+  wetlands_select <- wetlands[which(wetlands$WETLAND_TY == "Freshwater Emergent Wetland" | 
+                                      wetlands$WETLAND_TY == "Freshwater Forested/Shrub Wetland" |
+                                      wetlands$WETLAND_TY == "Freshwater Pond" |
+                                      wetlands$WETLAND_TY == "Other"),]
+  wetlands <- wetlands_select$ACRES  # area in acres
+  wetlands_m2 <- wetlands/247.105*1000000   # wetland areas in m2
+  wetlands_ha <- wetlands_m2/10000 # wetland areas in m2
+  rm(wetlands, wetlands_select)
+  
+  #' Also retrieve HUC8 area
+  watershed <- st_read(paste(DataWD, INDEX, '_Watershed/', INDEX, '_watershed.shp', sep = ""))
+  
+  watershed_ha <- watershed$AREASQKM*100 #HUC8 watershed area in square km _> hectare
+  
+  # Calculate N surplus within the watershed of givin area
+  N.IN_watershed <- N_SUR_kg_ha_yr*watershed_ha  ## kg nitrogen entering the watershed each year
+  
+  
+  
+  #' STEP 3 + 4: Determine K and T and N removal using n = 250 Monte Carlo simulations
+  
   num_sim =250
   wetlands_HUC <- as.data.frame(wetlands_m2)
   
   TAU_MC <- replicate(num_sim, apply(wetlands_HUC, 1, function(x) runif(1, a1, a2) 
                                      * x[1] ^ runif(1, b1 , b2)))
   
-  
   K_MC_ex <- replicate(num_sim, runif(length(wetlands_m2), d1, d2))
   K_MC_const <-  replicate(num_sim, runif(length(wetlands_m2), c1, c2))
-  
   K_MC <- K_MC_const*(TAU_MC ^ K_MC_ex)
   
   R_MC <- 1-exp(-1*(TAU_MC * K_MC))
+  
   remove(TAU_MC, K_MC, K_MC_ex, K_MC_const)
   
   CA_MC  <- replicate(num_sim,  wetlands_ha / runif(1, alpha1, alpha2))
@@ -178,17 +172,12 @@ RemovalsPerHUC8 <- function(INDEX, wetlands_df, HUC_Boundary_df){
   CA_RATIO[CA_RATIO<1] <- 1  
   CA_MC <- CA_MC / CA_RATIO
   
-  
   gamma_matrix <- replicate(num_sim, runif(length(wetlands_m2), gamma1, gamma2))
   N.IN_wetland_MC <- (N_SUR_kg_ha_yr * CA_MC * gamma_matrix)
-  
-  
   
   R_wetland_kg_yr_MC <- N.IN_wetland_MC * R_MC # this is the N removal of each wetlands in Kg
   R_HUC_kg_yr_MC <- colSums(R_wetland_kg_yr_MC) # total N removal within the givin huc (kg/yr)
   R_HUC_kg_ha_yr_MC <- R_HUC_kg_yr_MC/watershed_ha # total N removal within the givin huc per hectare
-  
-  
   
   WeightedRp <- colSums(CA_MC*R_MC) / watershed_ha  ## weighting each wetland by contributing area
   
@@ -212,11 +201,11 @@ RemovalsPerHUC8 <- function(INDEX, wetlands_df, HUC_Boundary_df){
                        Ra95 = quantile(R_HUC_kg_yr_MC, 0.95),
                        MeanRa = mean(R_HUC_kg_yr_MC), 
                        sdRa = sd(R_HUC_kg_yr_MC))
+  
   }
 
-#start_time <- Sys.time()
-#HUC8_Removals <- do.call('rbind', lapply(INDEX, FUN =  RemovalsPerHUC8, wetlands_df = wetlands, 
-                                         HUC_Boundary_df = HUC_Boundary))
+start_time <- Sys.time()
+HUC8_Removals <- do.call('rbind', lapply(INDEX, FUN =  RemovalsPerHUC8, data = data))
 end_time <- Sys.time()
 end_time - start_time
 
