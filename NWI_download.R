@@ -17,7 +17,7 @@
 setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files/NWI_Wetlands_US")
 
 #' Define a region of interest (there are 18 in the conterminus US)
-ROI <- "05"  
+ROI <- "09"  
 
 
 #' Calls in an input file, the INDEX, which is a list of the HUC numbers in
@@ -44,8 +44,18 @@ lapply(INDEX, Download_Wetlands)
 
 end_time <- Sys.time()
 end_time - start_time
-### takes about 0.5 minutes * INDEX length
+### takes about 50 minutes for 100 files
 
+
+
+### to unzip the files
+
+library(plyr)
+
+dir <- paste(DataWD, 'Region_', ROI, sep = "")
+zip_file <- list.files(path = dir, pattern = "*.zip", full.names = TRUE)
+
+ldply(.data = zip_file, .fun = unzip, exdir = dir)
 
 
 
