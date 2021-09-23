@@ -22,7 +22,8 @@ library(rgeos)
 
 OH_soils <- st_read("LEB_Ohio.shp")
 
-plot(OH_soils)  #check - takes a reaaaally long time 
+#plot(OH_soils)  #check - takes a reaaaally long time 
 
 NY_soils <- readOGR("LEB_NewYork.shp")
-plot(NY_soils)
+#plot(NY_soils)
+
