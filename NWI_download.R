@@ -44,7 +44,7 @@ lapply(INDEX, Download_Wetlands)
 
 end_time <- Sys.time()
 end_time - start_time
-### takes about 50 minutes for 100 files
+### takes about 5 minutes for 100 files
 
 
 
@@ -56,8 +56,4 @@ dir <- paste(DataWD, 'Region_', ROI, sep = "")
 zip_file <- list.files(path = dir, pattern = "*.zip", full.names = TRUE)
 
 ldply(.data = zip_file, .fun = unzip, exdir = dir)
-
-
-
-
 
