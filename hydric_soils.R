@@ -30,15 +30,31 @@ LEB_OH_hydric <- LEB_OH_soils[which(LEB_OH_soils$HYDRIC_RATING == "Hydric" |
                                       LEB_OH_soils$HYDRIC_RATING == "Predominantly Hydric"),]
 one <- c(1:5)
 mukey <- (LEB_OH_hydric$mukey)
-list <- paste(shQuote(one, type="cmd"), collapse = ", ")
+list <- paste(shQuote(mukey, type="sh"), collapse = ", ")
+write.table(list, "hydric_OH.text")
 
 
+## repeat for NY
 
-write.table(list, "file.text")
+LEB_NY <- c('NY003', 'NY009', 'NY013', 'NY029', 'NY037', 'NY121', 'NY605')
+soils <- get_SDA_hydric(LEB_NY)
+soils$HYDRIC_RATING <- as.factor(soils$HYDRIC_RATING)
+hydric <- soils[which(soils$HYDRIC_RATING == "Hydric" |
+                                      soils$HYDRIC_RATING == "Predominantly Hydric"),]
+mukey <- (hydric$mukey)
+list <- paste(shQuote(mukey, type="sh"), collapse = ", ")
+write.table(list, "hydric_NY.text")
 
 
-
-
+LEB_MI <- c('MI023', 'MI059', 'MI065', 'MI075', 'MI087', 'MI091', 'MI093', 'MI099',
+            'MI115', 'MI125', 'MI147', 'MI151', 'MI161', 'MI163')
+soils <- get_SDA_hydric(LEB_MI)
+soils$HYDRIC_RATING <- as.factor(soils$HYDRIC_RATING)
+hydric <- soils[which(soils$HYDRIC_RATING == "Hydric" |
+                        soils$HYDRIC_RATING == "Predominantly Hydric"),]
+mukey <- (hydric$mukey)
+list <- paste(shQuote(mukey, type="sh"), collapse = ", ")
+write.table(list, "hydric_MI.text")
 
 #' This is one step in the process for identifying *Historic Wetlands* 
 #' We are using SSOLRIS soils data, very fine scale resolution soils maps
