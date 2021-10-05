@@ -17,7 +17,7 @@
 setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files/NWI_Wetlands_US")
 
 #' Define a region of interest (there are 18 in the conterminus US)
-ROI <- "09"  
+ROI <- "01"  
 
 
 #' Calls in an input file, the INDEX, which is a list of the HUC numbers in
@@ -44,7 +44,7 @@ lapply(INDEX, Download_Wetlands)
 
 end_time <- Sys.time()
 end_time - start_time
-### takes about 5 minutes for 100 files
+### takes about 5-10 minutes for 50 files
 
 
 
