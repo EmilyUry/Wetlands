@@ -56,6 +56,29 @@ mukey <- (hydric$mukey)
 list <- paste(shQuote(mukey, type="sh"), collapse = ", ")
 write.table(list, "hydric_MI.text")
 
+
+
+LEB_PA <- c('PA039', 'PA049')
+soils <- get_SDA_hydric(LEB_PA)
+soils$HYDRIC_RATING <- as.factor(soils$HYDRIC_RATING)
+hydric <- soils[which(soils$HYDRIC_RATING == "Hydric" |
+                        soils$HYDRIC_RATING == "Predominantly Hydric"),]
+mukey <- (hydric$mukey)
+list <- paste(shQuote(mukey, type="sh"), collapse = ", ")
+write.table(list, "hydric_PA.text")
+
+
+
+LEB_IN <- c('IN001', 'IN003', 'IN033', 'IN113', 'IN151', 'IN179')
+soils <- get_SDA_hydric(LEB_IN)
+soils$HYDRIC_RATING <- as.factor(soils$HYDRIC_RATING)
+hydric <- soils[which(soils$HYDRIC_RATING == "Hydric" |
+                        soils$HYDRIC_RATING == "Predominantly Hydric"),]
+mukey <- (hydric$mukey)
+list <- paste(shQuote(mukey, type="sh"), collapse = ", ")
+write.table(list, "hydric_IN.text")
+
+
 #' This is one step in the process for identifying *Historic Wetlands* 
 #' We are using SSOLRIS soils data, very fine scale resolution soils maps
 #' and filtering by hydric soil types 
