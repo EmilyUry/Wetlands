@@ -8,6 +8,9 @@
 
 setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files")
 
+
+library(viridis)
+
 x <- read.csv("P_speciation2.csv", header = T)
 
 
@@ -58,13 +61,22 @@ hist(x$area)
 pal <- viridis(5)
 breaks <- c(-1, 100, 1000, 10000, 100000, 100000000000)
 rank <- as.factor(as.numeric(cut(x$area, breaks)))
-plot(filter$in.ratio, filter$out.ratio, pch = 16, col = pal[rank])
+size <- c(0.5, 0.9, 1.3, 1.7, 2.3, 3)
+par(mar = c(5, 5, 4, 2))
+plot(filter$in.ratio, filter$out.ratio, cex = size[rank], pch = 16, col = pal[rank],
+     xlab = "Inlet PO4:TP", ylab = "Outlet PO4:TP", 
+     main = "Wetland P speciation: Inlet vs Outlet")
+mtext("160 observations from 16 sources", side = 3, line =1)
 abline(a = 0, b = 1)
+legend("bottomright", c("small ", " ", " ", " ", "large "), pch = 16, col = pal, pt.cex = size, 
+       bty = "0", title = "Wetland area")
 
 
 
+filter$Rratio <- filter$out.ratio/filter$in.ratio
 
 
+plot(filter$area, filter$Rratio, log = "x")
 
 
 
