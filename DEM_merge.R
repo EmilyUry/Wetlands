@@ -41,9 +41,7 @@ filesH <- list.files(path = ".", pattern = "*.img")
 rastersH <- lapply(filesH, raster)
 
 
-
-setwd("C/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files/
-      Historic_wetlands_CAN/DEM")
+setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files/Historic_wetlands_CAN/DEM")
 
 start_time <- Sys.time()
 mosaic_C <- do.call(merge, rastersC)
