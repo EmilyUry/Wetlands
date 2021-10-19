@@ -15,10 +15,13 @@
 
 library(raster)
 
+setwd("C:/Users/Emily Ury/Downloads/SWOOP2015_DEM-B/PackageB")
+filesB <- list.files(path = ".", pattern = "*.img")
+rastersB <- lapply(filesB, raster)
 
 setwd("C:/Users/Emily Ury/Downloads/SWOOP2015_DEM-C/PackageC")
-files <- list.files(path = ".", pattern = "*.img")
-rastersC <- lapply(files, raster)
+filesC <- list.files(path = ".", pattern = "*.img")
+rastersC <- lapply(filesC, raster)
 
 setwd("C:/Users/Emily Ury/Downloads/SWOOP2015_DEM-D/PackageD")
 filesD <- list.files(path = ".", pattern = "*.img")
@@ -42,6 +45,12 @@ rastersH <- lapply(filesH, raster)
 
 
 setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files/Historic_wetlands_CAN/DEM")
+
+start_time <- Sys.time()
+mosaic_B <- do.call(merge, rastersB)
+writeRaster(mosaic_C,'DEM_C.tif')
+end_time <- Sys.time()
+end_time - start_time
 
 start_time <- Sys.time()
 mosaic_C <- do.call(merge, rastersC)
@@ -81,3 +90,22 @@ end_time - start_time
 
 
 
+
+
+## this following works petter in R
+
+map <- do.call(merge, rastersB[1:3])
+plot(map)
+
+
+map10 <- aggregate(map, 5, mean)
+plot(map10)
+
+
+plot(mosaic_C)
+start_time <- Sys.time()
+DEM_C_10 <- aggregate(mosaic_C, 5, mean)  ## took 10 mins to run the aggregation
+end_time <- Sys.time()
+end_time - start_time
+
+plot(DEM_C_10)
