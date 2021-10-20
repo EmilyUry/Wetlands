@@ -48,7 +48,7 @@ setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_
 
 start_time <- Sys.time()
 mosaic_B <- do.call(merge, rastersB)
-writeRaster(mosaic_C,'DEM_C.tif')
+writeRaster(mosaic_B,'DEM_B.tif', overwrite = TRUE)    ### fix this
 end_time <- Sys.time()
 end_time - start_time
 
