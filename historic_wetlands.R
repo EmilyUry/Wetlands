@@ -12,6 +12,55 @@
 
 ## Size distribution of hydric sinks
 
+setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files")
+setwd("C:/Users/Emily Ury/Desktop/New folder")
+
+C2 <- read.csv("Can_2m.csv", header = T)
+C2 <- C2[which(C2$area > 400),]
+hist(C2$area, breaks = 50)
+
+
+CWI <- read.csv("Can_CWI.csv", header = T)
+hist(CWI$area, breaks = 20)
+
+
+C10 <- read.csv("Can_10m.csv", header = T)
+C10 <- C10[which(C10$area > 400),]
+hist(C10$area, breaks = 50)
+
+
+
+C30 <- read.csv("Can_30m.csv", header = T)
+C30 <- C30[which(C30$area > 400),]
+hist(C30$area, breaks = 20)
+
+
+
+
+
+
+d <- density(C2$area)
+d2 <- density(CWI$area)
+d3 <- density(C10$area)
+plot(d3)
+polygon(d, col = "#9ecae199")
+polygon(d2)
+
+
+
+
+
+#####
+
+NWI <- read.csv("NWI_clip.csv", header = T)
+NWIs <- NWI[which(NWI$Shape_Area < 300000),]
+
+hist(NWIs$Shape_Area, breaks = 50)
+
+
+
+
+
 data <- read.csv("LEB_hydric_sinks.csv", header = TRUE)
 
 
@@ -65,3 +114,4 @@ polygon(d, col = "#FF000099", border="red", lwd = 3)
 polygon(d2, col = "#0000FF99", border="blue", lwd = 3)
 legend("topleft", c("TP", "PO4"), pch = 22, col = c("red", "blue"),
        pt.bg = c("#FF000099", "#0000FF99"), pt.cex = 2,  lwd = 3, lty = NA)
+
