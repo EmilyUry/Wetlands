@@ -1,15 +1,15 @@
 
 
-## P_removal_calcs
+#' ## P_removal_calcs
 
 
 #' # Wetland Nitrogen Removal Calculations
 
-#' ### Last update: 2021-08-23
+#' ### Last update: 2021-11-04
 
 #' This script is based on the analysis by [1] Cheng et al. (2020) *Nature* 
-#' The purpose is to estimate N removal by wetlands for a watershed (size
-#' HUC8). The inputs include Nitrogen surplus value at the HUC8 scale [3]
+#' The purpose is to estimate P removal by wetlands for a watershed (size
+#' HUC8). The inputs include P surplus value at the HUC8 scale [3]
 #' and wetland area for all wetlands within a given HUC8 watershed. 
 #' Wetland area data is from NWI https://www.fws.gov/wetlands/index.html
 #' and includes the following designations:
@@ -24,17 +24,17 @@
 #'   
 #' ## Contents
 #' 
-#'  1. Pull in N surplus for each HUC8
+#'  1. Pull in P surplus for each HUC8
 #'  2. Pull in NWI wetland area information from shapefile
-#'  3. Calculate K, TAU, CA, and N.IN from wetland area and N surplus data
-#'  4. Calculate N removal on a per HUC8 basis
+#'  3. Calculate K, TAU, CA, and N.IN from wetland area and P surplus data
+#'  4. Calculate P removal on a per HUC8 basis
 #'  
 #' ## Notes
 #'  
 #'  Steps 3 and 4 use a Monte Carlo approach
 #'  to include uncertainty around the variables K, TAU, CA and N.IN 
 #'  This approach uses the uncertainty to generate a distribution of final
-#'  N removal values from which we deliver the median and confidence interval.
+#'  P removal values from which we deliver the median and confidence interval.
 
 #' ## Index
 #'  
