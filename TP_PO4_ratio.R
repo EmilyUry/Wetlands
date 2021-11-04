@@ -32,7 +32,9 @@ x <- read.csv("P_speciation2.csv", header = T)
 
 ## bin data by wetland size into 5 roughly evenly sized bins
 breaks  <- c(0,30, 3000, 15000, 100000, 10000000000)
+#breaks <- c(-1, 100, 1000, 10000, 100000, 100000000000)
 tags <- c("0-30","30-3k", "3k-15k", "15k-100k", "100k+")
+#tags <- c("0-100","100-1k", "1k-10k", "10k-100k", "100k+")
 group_tags <- cut(x$area,
                   breaks = breaks,
                   include.lowest = TRUE, right = FALSE, 
@@ -193,6 +195,65 @@ boxplot(mag.f.norm ~ depth_bins, data = SFW, ylab = "PO4 retention / TP retentio
         xlab = "Wetland area (m2)", main = "Magnification factor, normalized by TP(inflow)",
         ylim = c(-50,150)) 
 
+####
+
+# dot plot
+
+SFW$in.ratio <- SFW$PO4_in/SFW$TP_in
+SFW$out.ratio <- SFW$PO4_out/SFW$TP_out
+
+#filter <- SFW[which(SFW$in.ratio < 2),]
+filter <- SFW
+
+pal <- viridis(5)
+#breaks <- c(-1, 100, 1000, 10000, 100000, 100000000000)
+breaks  <- c(0,30, 3000, 15000, 100000, 10000000000)
+rank <- as.factor(as.numeric(cut(filter$area, breaks)))
+size <- c(0.5, 0.9, 1.3, 1.7, 2.3, 3)
+par(mfrow = c(1,1), mar = c(5, 5, 4, 2))
+plot(filter$in.ratio, filter$out.ratio, cex = size[rank], pch = 16, col = pal[rank],
+     xlab = "Inlet PO4:TP", ylab = "Outlet PO4:TP", 
+     main = "Wetland P speciation: Inlet vs Outlet", 
+     xlim = c(0,1.25), ylim = c(0,1.1))
+mtext("111 observations from 20 sources", side = 3, line = 0.5)
+abline(a = 0, b = 1)
+legend("bottomright", c("small ", " ", " ", " ", "large "), pch = 16, col = pal, pt.cex = size, 
+       bty = "0", title = "Wetland area")
+
+
+##### look at points above, vs below the one to one line
+
+filter$ratio <- filter$out.ratio/filter$in.ratio
+summary(filter$ratio)
+
+breaks  <- c(0,1,7)
+tags <- c("LT1","GT1")
+group_tags <- cut(filter$ratio,
+                  breaks = breaks,
+                  include.lowest = TRUE, right = FALSE, 
+                  labels = tags)
+summary(group_tags)
+ratio_bins <- factor(group_tags, levels = tags, ordered = TRUE)
+filter$ratio_bins <- ratio_bins
+
+df <- as.data.frame(table(filter$area_bins, filter$ratio_bins))
+
+ndf <- pivot_wider(df, names_from = Var2, values_from = Freq)
+tot <- ndf$LT1+ndf$GT1
+lt1 <- ndf$LT1
+labs <- c("0-30","30-3k", "3k-15k", "15k-100k", "100k+")
+barplot(tot, name = labs, col = "gray40", ylab = "Number of Wetlands",
+        main = "Ratio of PO4:TP")
+barplot(lt1, col = "gray80", add = TRUE)
+legend("topright", c("> 1", "< 1"), pch = 22, pt.cex = 2, pt.bg = c("gray40", "gray80"), title ="(outflow/inflow)") 
+
+
+m <- matrix(ndf[,2:3])
+df
+
+
+
+
 
 
 
@@ -234,35 +295,40 @@ x$out.ratio <- x$PO4_out/x$TP_out
 filter <- x[which(x$out.ratio < 9 & x$in.ratio < 2),]
 
 
-plot(filter$in.ratio, filter$out.ratio)
-abline(a = 0, b = 1)
+# plot(filter$in.ratio, filter$out.ratio)
+# abline(a = 0, b = 1)
 
 
-
-hist(x$TP_Retention)
-pal <- viridis(5)
-breaks <- c(-1, 0.5, 0, 0.3, 0.6, 1)
-rank <- as.factor(as.numeric(cut(x$TP_Retention, breaks)))
-plot(filter$in.ratio, filter$out.ratio, pch = 16, col = pal[rank])
-abline(a = 0, b = 1)
-
-
-
-
+# hist(x$TP_Retention)
+# pal <- viridis(5)
+# breaks <- c(-1, 0.5, 0, 0.3, 0.6, 1)
+# rank <- as.factor(as.numeric(cut(x$TP_Retention, breaks)))
+# plot(filter$in.ratio, filter$out.ratio, pch = 16, col = pal[rank])
+# abline(a = 0, b = 1)
 
 hist(x$area)
 pal <- viridis(5)
 breaks <- c(-1, 100, 1000, 10000, 100000, 100000000000)
+#breaks  <- c(0,30, 3000, 15000, 100000, 10000000000)
 rank <- as.factor(as.numeric(cut(x$area, breaks)))
 size <- c(0.5, 0.9, 1.3, 1.7, 2.3, 3)
-par(mar = c(5, 5, 4, 2))
+par(mfrow = c(1,1), mar = c(5, 5, 4, 2))
 plot(filter$in.ratio, filter$out.ratio, cex = size[rank], pch = 16, col = pal[rank],
      xlab = "Inlet PO4:TP", ylab = "Outlet PO4:TP", 
      main = "Wetland P speciation: Inlet vs Outlet")
-mtext("160 observations from 16 sources", side = 3, line =1)
+mtext("160 observations from 16 sources", side = 3, line = 0.5)
 abline(a = 0, b = 1)
 legend("bottomright", c("small ", " ", " ", " ", "large "), pch = 16, col = pal, pt.cex = size, 
        bty = "0", title = "Wetland area")
+
+
+
+
+
+
+
+
+
 
 
 
