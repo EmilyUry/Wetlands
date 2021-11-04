@@ -146,6 +146,52 @@ dev.off()
 
 
 
+### a quick look at the same for depth
+
+summary(SFW$Depth)
+
+## bin data by wetland size into 5 roughly evenly sized bins
+breaks  <- c(0,0.2,0.3,0.4, 0.7, 3)
+tags <- c("0-0.2","0.2-0.3", "0.3-0.4", "0.4-0.7", "0.7+")
+group_tags <- cut(SFW$Depth,
+                  breaks = breaks,
+                  include.lowest = TRUE, right = FALSE, 
+                  labels = tags)
+summary(group_tags)
+depth_bins <- factor(group_tags, levels = tags, ordered = TRUE)
+SFW$depth_bins <- depth_bins
+
+newd <- select(SFW, c(study, Depth, area, TP_Retention, PO4_Retention, area_bins, depth_bins))
+
+mewd <- pivot_longer(newd, c(TP_Retention, PO4_Retention), names_to = "Species")  
+mewd$Species <- factor(mewd$Species, levels = c("TP_Retention", "PO4_Retention"), ordered = TRUE)
+
+
+
+#### P retention by DEPTH
+layout(matrix(1:3, ncol = 1))
+par(oma = c(3,3,2,4), mar =c(4,4,2,1))
+boxplot(TP_Retention ~ depth_bins, data = SFW, ylab = "fraction retained",
+        xlab = "", main = "TP")
+boxplot(PO4_Retention ~ depth_bins, data = SFW, ylab = "fraction retained",
+        xlab = "", main = "PO4")
+boxplot(value ~ Species*depth_bins, data = mewd, col = c("gray50", "white"), ylab = "fraction retained",
+        xlab = "", main = "Fraction P Retention", xaxt = "n", 
+        at = c(1,2,5,6,9,10,13,14,17,18))
+axis(1, at = c(1.5, 5.5, 9.5, 13.5, 17.5), 
+     labels = tags)
+legend("bottomleft", c("TP", "PO4"), pch = 22, pt.cex = 2, pt.bg = c("gray50", "white"))
+
+### Magnification factors by DEPTH
+layout(matrix(1:2, ncol = 1))
+par(oma = c(2,3,1,4), mar =c(4,4,4,1))
+boxplot(mag.f ~ depth_bins, data = SFW, ylab = "PO4 retention / TP retention",
+        xlab = "Wetland area (m2)", main = "Magnification factor")
+
+x$mag.f.norm <- x$mag.f/x$TP_in
+boxplot(mag.f.norm ~ depth_bins, data = SFW, ylab = "PO4 retention / TP retention / TP(in)",
+        xlab = "Wetland area (m2)", main = "Magnification factor, normalized by TP(inflow)",
+        ylim = c(-50,150)) 
 
 
 
@@ -153,20 +199,10 @@ dev.off()
 
 
 
-  
-  
-summary(x$Depth)
 
 
 
-
-
-
-
-
-
-
-
+### extra stuff/scratch
 
 
 
