@@ -84,13 +84,13 @@ alpha2 <- 0.2
 gamma1 <- 0.3  # reduction factor: fraction of P surplus that enters wetland
 gamma2 <- 0.5
 
-a1 <- 1.48    # coefficients from [2] eq. 13 (Table 4)
+a1 <- 1.48    # Constant in SA-TAU relationship from [2] Figure 4c,d
 a2 <- 1.62
-b1 <- 0.21
+b1 <- 0.21    # Exponent in SA-TAU relationship
 b2 <- 0.25
-c1 <- 0.31     # coefficients from [2] figure 3A
+c1 <- 0.31     # Constant in K-Tau relationshiop from [2] figure 3c
 c2 <- 0.45
-d1 <- -0.86
+d1 <- -0.86   # Exponent in K-Tau relationshiop
 d2 <- -0.7
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -155,7 +155,7 @@ RemovalsPerHUC8 <- function(INDEX, data){
   
   #' STEP 3: Calculate CA and P.IN
   
-  num_sim <- 250  # number of Monte Carlo simulations to run
+  num_sim <- 500  # number of Monte Carlo simulations to run
   
   # Determine the approximate contributing area of each wetland (in hectares)
   CA_MC  <- replicate(num_sim,  wetlands_ha / runif(1, alpha1, alpha2)) 
