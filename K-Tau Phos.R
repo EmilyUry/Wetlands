@@ -23,3 +23,26 @@ library(tidyr)
 
 ## Fred's meta-analysis of literature values
 x <- read.csv("P_speciation2.csv", header = T)
+
+
+## filters
+x <- x[which(x$area > 0),]
+x <- x[which(x$area < 1000000000),]
+
+## Tau = a(SA)^b
+
+plot(x$area, x$tau, log ="xy", pch = 16, col = c("darkgreen", "darkgreen", "darkgreen", "blue", "red")[x$Type])
+legend("topleft", c("Wetland", "Lake", "Reservoir"), pch = 16, col = c("darkgreen", "blue", "red"))
+fit <- lm(log(tau)~log(area), data = x)
+abline(fit)
+summary(fit)
+
+
+
+## calculate k (rate constant)
+x$k2 <- -1*(log(1-x$TP_Retention)/x$tau)
+plot(x$tau, x$k2, log = "xy")
+
+
+table(x$Type)
+ 
