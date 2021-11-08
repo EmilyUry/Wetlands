@@ -83,7 +83,7 @@ d1 <- -0.86
 d2 <- -0.7
 alpha1 <- .03  # this is the wetland to contributing area ratio [4]
 alpha2 <- 0.2 
-gamma1 <- 0.3  # catchment to area ratio
+gamma1 <- 0.3  # reduction factor: fraction of N surplus that enters wetland
 gamma2 <- 0.5
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
