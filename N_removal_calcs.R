@@ -73,14 +73,18 @@ library(sf)
 ## using a range of estimates for each variable
 ## these are all found in Extended Data Table 2 [1]
 
-a1 <- 1.48    # coefficients from [2] eq. 13 (Table 4)
+
+###  coefficients from Extended Data Table 2 [1]
+a1 <- 1.48    # Constant in SA-TAU relationship from [2] eq. 13 (Table 4)
 a2 <- 1.62
-b1 <- 0.21
+b1 <- 0.21    # Exponent in SA-TAU relationship
 b2 <- 0.25
-c1 <- 0.31     # coefficients from [2] figure 3A
+c1 <- 0.31     # Constant in K-Tau relationshiop from [2] figure 3A
 c2 <- 0.45
-d1 <- -0.86
+d1 <- -0.86   # Exponent in K-Tau relationshiop
 d2 <- -0.7
+
+
 alpha1 <- .03  # this is the wetland to contributing area ratio [4]
 alpha2 <- 0.2 
 gamma1 <- 0.3  # reduction factor: fraction of N surplus that enters wetland
