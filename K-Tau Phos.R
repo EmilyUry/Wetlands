@@ -53,10 +53,19 @@ summary(fit)
 
 ## calculate k (rate constant) PO4
 x$k2 <- -1*(log(1-x$PO4_Retention)/x$tau)
-#plot((x$tau), (x$k2), log = "xy", pch = 16, col = c("darkgreen", "darkgreen", "darkgreen", "blue", "red")[x$Type])
+plot((x$tau), (x$k2), log = "xy", pch = 16, col = c("darkgreen", "darkgreen", "darkgreen", "blue", "red")[x$Type])
 plot(log(x$tau), log(x$k2), pch = 16, col = c("darkgreen", "darkgreen", "darkgreen", "blue", "red")[x$Type])
 legend("topright", c("Wetland", "Lake", "Reservoir"), pch = 16, col = c("darkgreen", "blue", "red"))
 fit <- lm(log(k2)~log(tau), data = x)
 abline(fit)
 summary(fit)
+
+
+
+## symbol for NADB
+
+x$source <- ifelse(x$study == "NADB", 1, 2)
+plot(log(x$tau), log(x$k2), pch = c(1,16)[x$source], col = c("darkgreen", "darkgreen", "darkgreen", "blue", "red")[x$Type])
+
+
 
