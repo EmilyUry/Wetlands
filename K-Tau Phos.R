@@ -51,6 +51,23 @@ summary(fit)
 
 
 
+
+summary(x$TP_Retention)
+x$Z <- (x$TP_Retention - min(x$TP_Retention))/(max(x$TP_Retention) - min(x$TP_Retention))
+summary(x$Z)
+
+x$k3 <- -1*(log(1-x$Z)/x$tau)
+summary(x$k3)
+x <- x[which(x$k3 < 5 & x$k3 > 0),]
+plot(log(x$tau), log(x$k3), pch = 16, col = c("darkgreen", "darkgreen", "darkgreen", "blue", "red")[x$Type])
+legend("topright", c("Wetland", "Lake", "Reservoir"), pch = 16, col = c("darkgreen", "blue", "red"))
+fit <- lm(log(k3)~log(tau), data = x)
+abline(fit)
+summary(fit)
+
+
+
+
 ## calculate k (rate constant) PO4
 x$k2 <- -1*(log(1-x$PO4_Retention)/x$tau)
 plot((x$tau), (x$k2), log = "xy", pch = 16, col = c("darkgreen", "darkgreen", "darkgreen", "blue", "red")[x$Type])
