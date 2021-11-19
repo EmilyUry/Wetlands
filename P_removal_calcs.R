@@ -3,9 +3,9 @@
 #' ## P_removal_calcs
 
 
-#' # Wetland Nitrogen Removal Calculations
+#' # Wetland Phosphorus Removal Calculations
 
-#' ### Last update: 2021-11-04
+#' ### Last update: 2021-11-18
 
 #' This script is based on the analysis by [1] Cheng et al. (2020) *Nature* 
 #' The purpose is to estimate P removal by wetlands for a watershed (size
@@ -81,8 +81,8 @@ library(sf)
 
 alpha1 <- .03  # this is the wetland to contributing area ratio [4]
 alpha2 <- 0.2 
-gamma1 <- 0.3  # reduction factor: fraction of P surplus that enters wetland
-gamma2 <- 0.5
+gamma1 <- 0.1  # reduction factor: fraction of P surplus that enters wetland
+gamma2 <- 0.2
 
 a1 <- 1.48    # Constant in SA-TAU relationship from [2] Figure 4c,d
 a2 <- 1.62
@@ -101,7 +101,10 @@ d2 <- -0.7
 #' ## STEP 1: Read in Nitrogen input data
 #' This step is also used to generate an index of all HUCs in the data set
 
-data <- read.csv("N_surplus_LEB-US.csv")
+data <- read.csv("P_surplus_LEB-US-dummy.csv")
+
+data <- data[which(data$Cumulative_Psurplus_Kg_ha > 0),]
+
 data$HUC_name <- ifelse(data$HUC8>9999999, paste("HU8_", data$HUC8, sep = ""),
                         paste("HU8_0", data$HUC8, sep = ""))
 ## we will use HUC_name as a unique index for each watershed
@@ -117,7 +120,7 @@ INDEX <- data$HUC_name   # list of all the watersheds in the dataset
 RemovalsPerHUC8 <- function(INDEX, data){
   
   # Call in the N surplus value for the HUC
-  N_SUR_kg_ha_yr <- data$Nsurplus_Kg_ha_yr[which(data$HUC_name == INDEX)]
+  P_SUR_kg_ha <- data$Cumulative_Psurplus_Kg_ha[which(data$HUC_name == INDEX)]
   
   
   
@@ -149,7 +152,7 @@ RemovalsPerHUC8 <- function(INDEX, data){
   watershed_ha <- watershed$AREASQKM*100 #HUC8 watershed area in square km _> hectare
   
   # Calculate N surplus within the entire watershed
-  N.IN_watershed <- N_SUR_kg_ha_yr*watershed_ha  ## kg N entering watershed each yr
+  P.IN_watershed <- P_SUR_kg_ha*watershed_ha  ## kg N entering watershed each yr
   
   
   
@@ -166,13 +169,13 @@ RemovalsPerHUC8 <- function(INDEX, data){
   CA_RATIO[CA_RATIO<1] <- 1  
   CA_MC <- CA_MC / CA_RATIO
   
-  ## Gamma, "reduction factor", proportion of N within the CA that enters the wetland
+  ## Gamma, "reduction factor", proportion of P within the CA that enters the wetland
   ## Gamma is an approximation drawn from the literature and accounts for things like 
-  ## N that may have been denitrified upstream of the wetland or retained in soils
+  ## how much P stays in soils or is deposited on land before reaching wetlands
   gamma_matrix <- replicate(num_sim, runif(length(wetlands_m2), gamma1, gamma2))
   
   # Nitrogen in kg/yr that enters each wetland
-  N.IN_wetland_MC <- (N_SUR_kg_ha_yr * CA_MC * gamma_matrix)
+  P.IN_wetland_MC <- (P_SUR_kg_ha * CA_MC * gamma_matrix)
   
 
   
@@ -197,9 +200,9 @@ RemovalsPerHUC8 <- function(INDEX, data){
   
   remove(TAU_MC, K_MC, K_MC_ex, K_MC_const)
   
-  R_wetland_kg_yr_MC <- N.IN_wetland_MC * R_MC # this is the N removal of each wetlands in Kg
-  R_HUC_kg_yr_MC <- colSums(R_wetland_kg_yr_MC) # total N removal within the givin huc (kg/yr)
-  R_HUC_kg_ha_yr_MC <- R_HUC_kg_yr_MC/watershed_ha # total N removal within the huc per hectare
+  R_wetland_kg_MC <- P.IN_wetland_MC * R_MC # this is the N removal of each wetlands in Kg
+  R_HUC_kg_MC <- colSums(R_wetland_kg_MC) # total N removal within the givin huc (kg/yr)
+  R_HUC_kg_ha_MC <- R_HUC_kg_MC/watershed_ha # total N removal within the huc per hectare
   
   WeightedRp <- colSums(CA_MC*R_MC) / watershed_ha  ## weighting each wetland by CA
   
@@ -215,13 +218,13 @@ RemovalsPerHUC8 <- function(INDEX, data){
                        Rp95 = quantile(WeightedRp, 0.95),
                        MeanRp = mean(WeightedRp), 
                        sdRp = sd(WeightedRp),
-                       Ra5  = quantile(R_HUC_kg_ha_yr_MC, 0.05),
-                       Ra25 = quantile(R_HUC_kg_ha_yr_MC, 0.25),
-                       Ra50 = quantile(R_HUC_kg_ha_yr_MC, 0.50),
-                       Ra75 = quantile(R_HUC_kg_ha_yr_MC, 0.75),
-                       Ra95 = quantile(R_HUC_kg_ha_yr_MC, 0.95),
-                       MeanRa = mean(R_HUC_kg_ha_yr_MC), 
-                       sdRa = sd(R_HUC_kg_ha_yr_MC))
+                       Ra5  = quantile(R_HUC_kg_ha_MC, 0.05),
+                       Ra25 = quantile(R_HUC_kg_ha_MC, 0.25),
+                       Ra50 = quantile(R_HUC_kg_ha_MC, 0.50),
+                       Ra75 = quantile(R_HUC_kg_ha_MC, 0.75),
+                       Ra95 = quantile(R_HUC_kg_ha_MC, 0.95),
+                       MeanRa = mean(R_HUC_kg_ha_MC), 
+                       sdRa = sd(R_HUC_kg_ha_MC))
 }
 
 #' Run function and generate summary statistics for the 
@@ -232,6 +235,18 @@ HUC8_Removals <- do.call('rbind', lapply(INDEX, FUN =  RemovalsPerHUC8, data = d
 end_time <- Sys.time()
 end_time - start_time
 
+
+
+## write output to shapefile
+
+
+watersheds <- st_read("Lake_Erie_HUC8.shp")
+watersheds$INDEX <-  paste("HU8_", watersheds$HUC8, sep = "") 
+
+
+save <- left_join(watersheds, HUC8_Removals, by = "INDEX")
+
+st_write(save, "P_Removal_LEB_counties_US.shp")
 
 
 
