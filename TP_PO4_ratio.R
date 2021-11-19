@@ -148,6 +148,12 @@ dev.off()
 
 
 
+
+
+
+
+
+
 ### a quick look at the same for depth
 
 summary(SFW$Depth)
@@ -210,7 +216,7 @@ pal <- viridis(5)
 breaks  <- c(0,30, 3000, 15000, 100000, 10000000000)
 rank <- as.factor(as.numeric(cut(filter$area, breaks)))
 size <- c(0.5, 0.9, 1.3, 1.7, 2.3, 3)
-par(mfrow = c(1,1), mar = c(5, 5, 4, 2))
+par(mfrow = c(1,1), mar = c(5, 5, 4, 2), xpd= FALSE)
 plot(filter$in.ratio, filter$out.ratio, cex = size[rank], pch = 16, col = pal[rank],
      xlab = "Inlet PO4:TP", ylab = "Outlet PO4:TP", 
      main = "Wetland P speciation: Inlet vs Outlet", 
@@ -248,8 +254,83 @@ barplot(lt1, col = "gray80", add = TRUE)
 legend("topright", c("> 1", "< 1"), pch = 22, pt.cex = 2, pt.bg = c("gray40", "gray80"), title ="(outflow/inflow)") 
 
 
-m <- matrix(ndf[,2:3])
-df
+
+
+### stack bar plots
+
+tot
+num <- tot/tot
+num
+lt1
+frac <- lt1/tot
+frac
+par(xpd= TRUE)
+barplot(num, name = labs, col = "gray40", ylab = "Fraction of Wetlands",
+        main = "Ratio of PO4:TP")
+barplot(frac, col = "gray80", add = TRUE)
+legend("bottomright", c("> 1", "< 1"), pch = 22, pt.cex = 2, pt.bg = c("gray40", "gray80"), title ="(outflow/inflow)") 
+text(0.8,1.02, "n=30")
+text(1.9,1.02, "n=23")
+text(3.1,1.02, "n=41")
+text(4.2,1.02, "n=26")
+text(5.4,1.02, "n=16")
+
+
+
+
+### stacked bar plots of TP and OF source/sink by size
+
+source <- SFW[which(SFW$TP_Retention < 0),]
+sink <- SFW[which(SFW$TP_Retention > 0),]
+table(SFW$area_bins)
+table(source$area_bins)
+table(sink$area_bins)
+
+num <- c(30, 35, 41, 26, 16)
+TP_sink <- c(30, 24, 34, 26, 15)
+frac.TP_sink <- TP_sink/num
+ones <- c(1,1,1,1,1)
+
+par(mfrow = c(1,1))
+barplot(ones, name = labs, col = "gray40", ylab = "Fraction of Wetlands",
+        main = "TP Retention")
+barplot(frac.TP_sink, col = "gray80", add = TRUE)
+legend("bottomright", c("Source", "Sink"), pch = 22, pt.cex = 2, pt.bg = c("gray40", "gray80"), title ="TP") 
+text(0.8,1.02, "n=30")
+text(1.9,1.02, "n=23")
+text(3.1,1.02, "n=41")
+text(4.2,1.02, "n=26")
+text(5.4,1.02, "n=16")
+
+
+
+
+
+source <- SFW[which(SFW$PO4_Retention < 0),]
+sink <- SFW[which(SFW$PO4_Retention > 0),]
+table(SFW$area_bins)
+table(source$area_bins)
+table(sink$area_bins)
+
+num <- c(30, 35, 41, 26, 16)
+PO4_sink <- c(30, 16, 27, 25, 13)
+frac.PO4_sink <- PO4_sink/num
+
+par(mfrow = c(1,1))
+barplot(ones, name = labs, col = "gray40", ylab = "Fraction of Wetlands",
+        main = "PO4 Retention")
+barplot(frac.PO4_sink, col = "gray80", add = TRUE)
+legend("bottomright", c("Source", "Sink"), pch = 22, pt.cex = 2, pt.bg = c("gray40", "gray80"), title ="TP") 
+text(0.8,1.02, "n=30")
+text(1.9,1.02, "n=23")
+text(3.1,1.02, "n=41")
+text(4.2,1.02, "n=26")
+text(5.4,1.02, "n=16")
+
+
+
+
+
 
 
 
