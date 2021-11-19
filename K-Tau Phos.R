@@ -38,6 +38,50 @@ legend("topleft", c("Wetland", "Lake", "Reservoir"), pch = 16, col = c("darkgree
 fit <- lm(log(tau)~log(area), data = x)
 abline(fit)
 summary(fit)
+abline(.6, .22)
+
+plot(x$area, x$tau, logs= "xy", pch = 16, col = c("darkgreen", "darkgreen", "darkgreen", "blue", "red")[x$Type])
+legend("topleft", c("Wetland", "Lake", "Reservoir"), pch = 16, col = c("darkgreen", "blue", "red"))
+fit <- lm(tau~area, data = x)
+abline(fit)
+summary(fit)
+abline(.6, exp(.22))
+
+
+
+
+
+plot(x$area, x$tau, pch = 16, col = c("darkgreen", "darkgreen", "darkgreen", "blue", "red")[x$Type])
+legend("topleft", c("Wetland", "Lake", "Reservoir"), pch = 16, col = c("darkgreen", "blue", "red"))
+fit <- lm(tau~area, data = x)
+abline(fit)
+summary(fit)
+
+plot(log(x$area), x$tau, pch = 16, col = c("darkgreen", "darkgreen", "darkgreen", "blue", "red")[x$Type])
+legend("topleft", c("Wetland", "Lake", "Reservoir"), pch = 16, col = c("darkgreen", "blue", "red"))
+fit <- lm(tau~log(area), data = x)
+abline(fit)
+summary(fit)
+
+
+plot(x$area, log(x$tau), pch = 16, col = c("darkgreen", "darkgreen", "darkgreen", "blue", "red")[x$Type])
+legend("topleft", c("Wetland", "Lake", "Reservoir"), pch = 16, col = c("darkgreen", "blue", "red"))
+fit <- lm(log(tau)~area, data = x)
+abline(fit)
+summary(fit)
+
+
+theta.0 <- 0
+alpha.0 <- exp(0.6)
+beta.0 <- 0.22
+start <- list(alpha = alpha.0, beta = beta.0, theta = 0)
+start
+model <-nls(tau ~ alpha*exp(beta*area) + theta, data = x, start = start)
+coef(model)
+
+#           a           r 
+# 11.30876845  0.09867135
+
 
 
 
