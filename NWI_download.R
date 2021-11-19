@@ -17,7 +17,7 @@
 setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files/NWI_Wetlands_US")
 
 #' Define a region of interest (there are 18 in the conterminus US)
-ROI <- "01"  
+ROI <- "11"  
 
 
 #' Calls in an input file, the INDEX, which is a list of the HUC numbers in
@@ -30,9 +30,9 @@ INDEX <- INDEX[,1] # now index is a list instead of a dataframe
 #' Write a function to download the file of interest
 #' NOTE: for regions 10-18, you need to delete the leading zero in lines 33 and 35
 Download_Wetlands <- function(INDEX) {
-  download.file(paste('https://www.fws.gov/wetlands/downloads/Watershed/HU8_0',
+  download.file(paste('https://www.fws.gov/wetlands/downloads/Watershed/HU8_',
                       INDEX, '_watershed.zip', sep = ""), 
-                paste(DataWD, 'Region_', ROI,  '/HU8_0', INDEX, '_watershed.zip', sep = "")) 
+                paste(DataWD, 'Region_', ROI,  '/HU8_', INDEX, '_watershed.zip', sep = "")) 
 }
 
 
