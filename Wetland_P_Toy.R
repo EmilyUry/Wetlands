@@ -59,7 +59,7 @@ legend("bottomright", c("Constructed", "restored", "mesocosm", "natural"), pch =
 
 
 
-x$ratio <- x$TP_Retention_./x$PO4_Retention_.
+#x$ratio <- x$TP_Retention_./x$PO4_Retention_.
 x$ratio <- x$PO4_Retention_./x$TP_Retention_.
 
 plot(x$logTP_inflow_mg_L, x$ratio, ylim = c(-30,10))
@@ -95,6 +95,48 @@ plot(x$TP_Retention_., x$PO4_Retention_., pch=16, col = x$area_bins)
 abline(h=0)
 abline(v=0)
 legend("bottomleft", c("small","medium", "med-large","large"), pch = 16, col = c(1:4))
+
+
+
+
+
+
+### Relative flow (relflow) is the amount of water the wetland recieves relative to its size
+### this should be a good predictor of P retention and P retention ratio
+x$relflow <- x$Inflow_m3_yr/x$Area_m2
+x$logrelflow <- x$logInflow_m3_yr/x$logArea_m2
+plot(x$relflow, x$TP_Retention_.)
+plot(x$relflow, x$PO4_Retention_.)
+
+
+plot(x$logrelflow, x$TP_Retention_.)
+plot(x$logrelflow, x$PO4_Retention_., pch = 16, col = x$Reference.Paper)
+
+
+
+## normalize relflow for inflow conc
+
+
+x$n.relflow <- x$Inflow_m3_yr/x$Area_m2/x$TP_inflow_mg_L
+plot(x$n.relflow, x$TP_Retention_.)
+plot(log(x$n.relflow), x$PO4_Retention_.)
+
+
+
+rbPal <- colorRampPalette(c('red','blue'))
+x$col <- rbPal(10)[as.numeric(cut(x$logTP_inflow_mg_L, breaks = 10))]
+plot(x$relflow, x$TP_Retention_., pch = 16, col = x$col)
+plot(x$relflow, x$PO4_Retention_., pch = 16, col = x$col)
+
+
+
+
+
+plot(log(x$n.relflow), x$PO4_Retention_., pch = 16, col = x$col)
+
+
+
+
 
 
 
