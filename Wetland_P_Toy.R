@@ -138,6 +138,36 @@ plot(log(x$n.relflow), x$SRP_Retention_percent, pch = 16, col = x$col)
 
 
 
+## compare loding and inflow concentration
+
+x$ret <- ifelse(x$TP_Retention_percent > 0, "pos", "neg")
+plot(log(x$TP_Inflow_mg_L), log(x$TP_load_in_g_m2_yr), pch = 16, col = as.factor(x$ret))
+
+rbPal <- colorRampPalette(c('red','blue'))
+x$col <- rbPal(9)[as.numeric(cut(x$TP_Retention_percent, breaks = c(-1000, -100, -10, -1, 0 , 1, 10, 50, 100)))]
+plot(log(x$TP_Inflow_mg_L), log(x$TP_load_in_g_m2_yr), pch = 16, col = x$col)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
