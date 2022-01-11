@@ -149,8 +149,8 @@ plot(log(x$TP_Inflow_mg_L), log(x$TP_load_in_g_m2_yr), pch = 16, col = x$col)
 
 
 
-
-
+table(x$ret)
+29/(29+143)
 
 
 
