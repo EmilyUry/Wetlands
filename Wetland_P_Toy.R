@@ -154,12 +154,26 @@ table(x$ret)
 
 
 
+x$PO4ret <- ifelse(x$SRP_Retention_percent > 0, "pos", "neg")
+table(x$PO4ret)
+46/(46+125)
 
 
 
+data<- matrix(c(29,143,46,125), nrow = 2)
+names(data) <- c("TP", "SRP")
+rownames(data) <- c("source", "sink")
 
-
-
+barplot(data, col = c("lightblue", "royalblue3"),
+        border = "black", 
+        space = 0.1, 
+        xlab = " ", 
+        ylab = "# wetland (site-years)")
+text(0.7,10, "Source (17%)", font = 2, cex = 2)
+text(0.45,70, "Sink", font = 2, cex = 2)
+text(1.55,70, "Sink", font = 2, cex = 2)
+text(1.8,10, "Source (27%)", font = 2, cex = 2)
+mtext("n=172", 3, 0)
 
 
 
