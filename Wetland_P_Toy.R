@@ -160,28 +160,78 @@ table(x$PO4ret)
 
 
 
-data<- matrix(c(29,143,46,125), nrow = 2)
-names(data) <- c("TP", "SRP")
-rownames(data) <- c("source", "sink")
+data<- matrix(c(143, 29, 125, 46), nrow = 2)
+colnames(data) <- c("TP", "SRP")
+rownames(data) <- c("sink", "source")
 
-barplot(data, col = c("lightblue", "royalblue3"),
+barplot(data, col = c("royalblue3", "lightblue"),
         border = "black", 
         space = 0.1, 
         xlab = " ", 
         ylab = "# wetland (site-years)")
-text(0.7,10, "Source (17%)", font = 2, cex = 2)
-text(0.45,70, "Sink", font = 2, cex = 2)
-text(1.55,70, "Sink", font = 2, cex = 2)
-text(1.8,10, "Source (27%)", font = 2, cex = 2)
+text(0.4,150, "Source (17%)", font = 2, cex = 1.5)
+text(0.21,10, "Sink", font = 2, cex = 1.5)
+text(1.31,10, "Sink", font = 2, cex = 1.5)
+text(1.5,132, "Source (27%)", font = 2, cex = 1.5)
 mtext("n=172", 3, 0)
 
 
+hist(x$TP_Inflow_mg_L)
+hist(x$logTP_Inflow_mg_L)
 
 
 
 
+par(mfrow = c(1,2))
+
+## bin data by inflow TP concentration
+breaks  <- c(0, 0.1, 1, 10, 100)
+tags <- c("<0.1","0.1 - 1", "1-10", ">10")
+group_tags <- cut(x$TP_Inflow_mg_L,
+                  breaks = breaks,
+                  include.lowest = TRUE, right = FALSE, 
+                  labels = tags)
+summary(group_tags)
+TPin_bins <- factor(group_tags, levels = tags, ordered = TRUE)
+x$TPin_bins <- TPin_bins
 
 
+table(x$TPin_bins, x$ret)
+data<- matrix(c(31, 7, 57,11,24,3,31,0), nrow = 2)
+names(data) <- c("<0.1","0.1 - 1", "1-10", ">10")
+rownames(data) <- c("sink", "source")
+
+barplot(data, col = c("royalblue3", "lightblue"),
+        border = "black", ylim = c(0,70),
+        space = 0.1, main = "TP",
+        xlab = "Inflow [TP] (mg/L)", 
+        ylab = "frequency")
+legend("topright", c("source", "sink"), pch = 22, cex = 1, pt.bg = c("lightblue","royalblue3") )
+mtext("<0.1        0.1 - 1        1-10        >10", 1, 0.2)
+
+## bin data by inflow TP concentration
+breaks  <- c(0, 0.1, 1, 10, 100)
+tags <- c("<0.1","0.1 - 1", "1-10", ">10")
+group_tags <- cut(x$SRP_Inflow_mg_L,
+                  breaks = breaks,
+                  include.lowest = TRUE, right = FALSE, 
+                  labels = tags)
+summary(group_tags)
+SRPin_bins <- factor(group_tags, levels = tags, ordered = TRUE)
+x$SRPin_bins <- SRPin_bins
+
+table(x$SRPin_bins, x$ret)
+data2<- matrix(c(58, 12, 43, 7, 11, 2, 31, 0), nrow = 2)
+names(data2) <- c("<0.1","0.1 - 1", "1-10", ">10")
+rownames(data2) <- c("sink", "source")
+
+barplot(data2, col = c("royalblue3", "lightblue"),
+        border = "black",  ylim = c(0,70),
+        space = 0.1, main = "SRP",
+        xlab = "Inflow [SRP] (mg/L)", 
+        ylab = "frequency")
+legend("topright", c("source", "sink"), pch = 22, cex = 1, pt.bg = c("lightblue","royalblue3") )
+mtext("<0.1        0.1 - 1        1-10        >10", 1, 0.2)
 
 
 
