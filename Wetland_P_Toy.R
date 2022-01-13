@@ -37,13 +37,13 @@ plot(x$logArea_m2, x$TP_Retention_percent, pch = 16, col = x$Catchment_Type, yli
 plot(x$logInflow_m3_yr, x$TP_Retention_percent, pch = 16, col = x$Catchment_Type, ylim = c(-60, 100))
 plot(x$logTP_Inflow_mg_L, x$TP_Retention_percent, pch = 16, col = x$Catchment_Type, ylim = c(-60, 100))
 legend("bottomright", c("Ag", "urban", "WWTP"), pch = 16, col = c(1,2,3))
-
+levels(x$Catchment_Type)
 
 plot(x$logArea_m2, x$TP_Retention_percent, pch = 16, col = x$Wetland_Type, ylim = c(-60, 100))
 plot(x$logInflow_m3_yr, x$TP_Retention_percent, pch = 16, col = x$Wetland_Type, ylim = c(-60, 100))
 plot(x$logTP_Inflow_mg_L, x$TP_Retention_percent, pch = 16, col = x$Wetland_Type, ylim = c(-60, 100))
-legend("bottomright", c("Constructed", "restored", "mesocosm", "natural"), pch = 16, col = c(1,2,3,4))
-
+legend("bottomright", c("Constructed", "Mesocosm", "Natural", "Restored"), pch = 16, col = c(1,2,3,4))
+levels(x$Wetland_Type)
 
 ### SRP retention
 plot(x$logArea_m2, x$SRP_Retention_percent, pch = 16, col = x$Catchment_Type)
@@ -55,7 +55,7 @@ legend("bottomright", c("Ag", "urban", "WWTP"), pch = 16, col = c(1,2,3))
 plot(x$logArea_m2, x$SRP_Retention_percent, pch = 16, col = x$Wetland_Type)
 plot(x$logInflow_m3_yr, x$SRP_Retention_percent, pch = 16, col = x$Wetland_Type)
 plot(x$logTP_Inflow_mg_L, x$SRP_Retention_percent, pch = 16, col = x$Wetland_Type)
-legend("bottomright", c("Constructed", "restored", "mesocosm", "natural"), pch = 16, col = c(1,2,3,4))
+legend("bottomright", c("Constructed", "Mesocosm", "Natural", "Restored"), pch = 16, col = c(1,2,3,4))
 
 
 
@@ -150,30 +150,34 @@ plot(log(x$TP_Inflow_mg_L), log(x$TP_load_in_g_m2_yr), pch = 16, col = x$col)
 
 
 table(x$ret)
-29/(29+143)
-
-
+32/(32+144)
+TP.source <- table(x$ret)[1]
+TP.sink <- table(x$ret)[2]
+TP.source.percent <- round(TP.source/(TP.sink+TP.source)*100,1)
 
 x$PO4ret <- ifelse(x$SRP_Retention_percent > 0, "pos", "neg")
 table(x$PO4ret)
-46/(46+125)
+49/(49+126)
+SRP.source <- table(x$PO4ret)[1]
+SRP.sink <- table(x$PO4ret)[2]
+SRP.source.percent <- round(SRP.source/(SRP.sink+SRP.source)*100,1)
 
-
-
-data<- matrix(c(143, 29, 125, 46), nrow = 2)
+data<- matrix(c(TP.sink, TP.source, SRP.sink, SRP.source), nrow = 2)
 colnames(data) <- c("TP", "SRP")
 rownames(data) <- c("sink", "source")
 
+par(mfrow = c(1,1))
 barplot(data, col = c("royalblue3", "lightblue"),
         border = "black", 
         space = 0.1, 
         xlab = " ", 
         ylab = "# wetland (site-years)")
-text(0.4,150, "Source (17%)", font = 2, cex = 1.5)
+text(0.4,150, paste(TP.source.percent, "% source", sep = ""), font = 2, cex = 1.5)
 text(0.21,10, "Sink", font = 2, cex = 1.5)
 text(1.31,10, "Sink", font = 2, cex = 1.5)
-text(1.5,132, "Source (27%)", font = 2, cex = 1.5)
-mtext("n=172", 3, 0)
+text(1.5,132, paste(SRP.source.percent, "% source", sep =""),  font = 2, cex = 1.5)
+data.n <- nrow(x)
+mtext(data.n, 3, 0)
 
 
 hist(x$TP_Inflow_mg_L)
@@ -181,7 +185,8 @@ hist(x$logTP_Inflow_mg_L)
 
 
 
-
+#### plot retention by size bin
+{
 par(mfrow = c(1,2))
 
 ## bin data by inflow TP concentration
@@ -196,8 +201,10 @@ TPin_bins <- factor(group_tags, levels = tags, ordered = TRUE)
 x$TPin_bins <- TPin_bins
 
 
-table(x$TPin_bins, x$ret)
-data<- matrix(c(31, 7, 57,11,24,3,31,0), nrow = 2)
+summary <- table(x$TPin_bins, x$ret)
+summary
+data<- matrix(c(summary[1,2], summary[1,1], summary[2,2],summary[2,1],summary[3,2],
+                summary[3,1],summary[4,2],summary[4,1]), nrow = 2)
 names(data) <- c("<0.1","0.1 - 1", "1-10", ">10")
 rownames(data) <- c("sink", "source")
 
@@ -219,9 +226,11 @@ group_tags <- cut(x$SRP_Inflow_mg_L,
 summary(group_tags)
 SRPin_bins <- factor(group_tags, levels = tags, ordered = TRUE)
 x$SRPin_bins <- SRPin_bins
+summary <- table(x$SRPin_bins, x$ret)
+summary
+data2<- matrix(c(summary[1,2], summary[1,1], summary[2,2],summary[2,1],summary[3,2],
+                summary[3,1],summary[4,2],summary[4,1]), nrow = 2)
 
-table(x$SRPin_bins, x$ret)
-data2<- matrix(c(58, 12, 43, 7, 11, 2, 31, 0), nrow = 2)
 names(data2) <- c("<0.1","0.1 - 1", "1-10", ">10")
 rownames(data2) <- c("sink", "source")
 
@@ -232,6 +241,19 @@ barplot(data2, col = c("royalblue3", "lightblue"),
         ylab = "frequency")
 legend("topright", c("source", "sink"), pch = 22, cex = 1, pt.bg = c("lightblue","royalblue3") )
 mtext("<0.1        0.1 - 1        1-10        >10", 1, 0.2)
+}
 
+par(mfrow = c(1,2))
+plot(x$logArea_m2, x$TP_Retention_percent, pch = 16, col = x$Wetland_Type, ylim = c(-200,100) )
+abline(h=0, lty =2)
+legend("bottomright", c("Constructed", "Mesocosm", "Natural", "Restored"), pch = 16, col = c(1,2,3,4))
+fit <- lm(TP_Retention_percent ~ logArea_m2, data = x)
+abline(fit, col = "lightpink")
+summary(fit)
 
+plot(x$logArea_m2, x$SRP_Retention_percent, pch = 16, col = x$Wetland_Type, ylim = c(-200,100) )
+abline(h=0, lty =2)
+fit <- lm(SRP_Retention_percent ~ logArea_m2, data = x)
+abline(fit, col = "lightpink")
+summary(fit)
 
