@@ -257,3 +257,44 @@ fit <- lm(SRP_Retention_percent ~ logArea_m2, data = x)
 abline(fit, col = "lightpink")
 summary(fit)
 
+
+
+
+#### exploration of drivers
+
+x<- x[-c(118,119,120,121,122,123,124,125,135),]
+
+lmMod <- lm(TP_Retention_percent ~ logArea_m2 + logInflow_m3_yr + TP_Inflow_mg_L  + Wetland_Type, 
+            data = x)
+summary(lmMod)
+selectedMod <- step(lmMod)
+summary(selectedMod)
+
+
+all_vifs <- car::vifs(selectedMod)
+
+
+
+
+### Annual average removal rate
+
+x$TP_RR <- x$TP_load_in_g_m2_yr*(1 - x$TP_Retention_percent/100)
+x$SRP_RR <- x$SRP_load_in_g_m2_yr*(1- x$SRP_Retention_percent/100)
+
+
+
+hist(log(x$TP_RR))
+hist(log(x$SRP_RR))
+
+
+
+
+
+
+
+
+
+
+
+
+
