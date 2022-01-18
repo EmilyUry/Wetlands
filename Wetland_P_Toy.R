@@ -288,9 +288,28 @@ hist(log(x$SRP_RR))
 
 
 
+### 3D plots
+## TP inflow (mg/L) (x), TP removal (g/m2/yr) (y), HLR (m/yr) (z)
 
+x$HRL <- x$Inflow_m3_yr/x$Area_m2
+hist(x$HRL)
+x$TP_removal <- x$TP_load_in_g_m2_yr - x$TP_RR
 
+library(scatterplot3d)
 
+mycolors <- c('royalblue1', 'darkcyan', 'oldlace', 'red')
+x$color <- mycolors[ as.numeric(x$Wetland_Type) ]
+
+s3d <- scatterplot3d(x$TP_Inflow_mg_L,  x$HRL, x$TP_removal, type = "h",
+        xlab = "Inflow TP (mg/L)", zlab = "TP removal (g/m2/yr)", ylab = "HLR (m/yr)", 
+        xlim = c(0,5), zlim = c(-10,40), ylim = c(0,60),
+        angle = 65, box = T)
+
+my.lm <- lm( x$TP_removal ~ x$TP_Inflow_mg_L + x$HRL)
+s3d$plane3d(my.lm)
+
+my.lm
+summary(my.lm)
 
 
 
