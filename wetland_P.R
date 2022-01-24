@@ -12,7 +12,7 @@ head(x)
 x<- x[-c(118,119,120,121,122,123,124,125,135),]
 
 
-lX<-log(x[,c(11,13, 15,16)])
+lX<-log(x[,c(11,13, 16,17)])
 colnames(lX)<-paste("log",colnames(lX),sep="")
 x<-cbind(x,lX); rm(lX)
 
@@ -24,7 +24,7 @@ x$TP_load_out <- x$TP_load_in_g_m2_yr*(1 - x$TP_Retention_percent/100)
 x$SRP_load_out <- x$SRP_load_in_g_m2_yr*(1- x$SRP_Retention_percent/100)
 
 ### Hydraulic loading rate
-x$HRL <- x$Inflow_m3_yr/x$Area_m2
+x$HLR <- x$Inflow_m3_yr/x$Area_m2
 
 
 ### mass removed
@@ -99,7 +99,36 @@ plot(x$SRP_Inflow_mg_L, x$SRP_Retention_percent, log = "x",
 
 
 
+## fred's figures: K ~ tau
+par(mfrow = c(1,1))
+
+## calculate Tau
+#x <- x[which(x$Area_m2 < 500000),]
+
+#plot(x$Area_m2, x$HRT_d, xlim = c(0,20000))
+
+plot(x$Area_m2, x$HRT_d, log = 'xy')
+
+fit <- lm(HRT_d ~ Area_m2, data = x)
+abline(fit)
+summary(fit)
+
+
+x$Tau. <- x
+
+x$Tau <- x$Area_m2*0.00019086 
+
+hist(x$Tau)
 
 
 
 
+## calculate k (rate constant) TP
+x$k <- -(log(1-(x$TP_Retention_percent/100))/x$Tau)
+plot(x$Tau, x$k, log = 'xy')
+fit <- lm(log(x$k) ~ log(x$Tau))
+summary(fit)
+abline(fit)
+x <- seq(0,10, by = 0.1)
+y <- 0.33*exp(-0.88*x)
+points(x,y, col = "red")
