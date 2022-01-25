@@ -3,13 +3,13 @@
 ## data exploration of wetland P retention from literature studies
 
 
-setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files")
+setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files/Wetland_P_Analysis/")
 
 x <- read.csv("Wetland_P_Toy_Data2.csv", header = T)
 head(x)
 
-## omit rows with missing data
-x<- x[-c(118,119,120,121,122,123,124,125,135),]
+## omit rows with missing concentration data
+#x<- x[-c(118,119,120,121,122,123,124,125,135),]
 
 
 lX<-log(x[,c(11,13, 16,17)])
@@ -107,28 +107,95 @@ par(mfrow = c(1,1))
 
 #plot(x$Area_m2, x$HRT_d, xlim = c(0,20000))
 
-plot(x$Area_m2, x$HRT_d, log = 'xy')
+y <- x[which(x$HRT_d >0),]
+plot(log(y$Area_m2), log(y$HRT_d))
+fit <- lm(log(HRT_d) ~ log(Area_m2), data = y)
+summary(fit)                                      ## not great.
+abline(fit, col = 'red')
 
-fit <- lm(HRT_d ~ Area_m2, data = x)
-abline(fit)
-summary(fit)
+
+x1 <- c(1,10,1000,10000,100000, 10000000, 100000000)
+y1 <- exp(1.64)*x1^(0.04898)
+
+plot(y$Area_m2, y$HRT_d, log = 'xy', 
+     xlab = "Surface Area (m2)",
+     ylab = "Hydraulic Residence Time, Tau (d)")
+points(x1,y1, col = "red", type = 'l')
+text(100, 50, "Tau = 5.2*SA^0.049")
+text(100, 40, "R2 = 0.045, p = 0.011")
+ 
+
+## The SA~Tau relationship from this data set is very weak,
+## we will use the relationship from Cheng and Basu 2017 Eq. 13
 
 
-x$Tau. <- x
 
-x$Tau <- x$Area_m2*0.00019086 
-
+x$Tau <- 1.51*x$Area_m2^0.23
+points(x$Area_m2, x$Tau, type ='l')
 hist(x$Tau)
 
 
 
 
 ## calculate k (rate constant) TP
-x$k <- -(log(1-(x$TP_Retention_percent/100))/x$Tau)
-plot(x$Tau, x$k, log = 'xy')
-fit <- lm(log(x$k) ~ log(x$Tau))
+x$k2 <- -(log(1-(x$TP_Retention_percent/100))/x$Tau)
+
+plot(log(x$Tau), log(x$k2))
+fit <- lm(log(x$k2) ~ log(x$Tau))
 summary(fit)
-abline(fit)
-x <- seq(0,10, by = 0.1)
-y <- 0.33*exp(-0.88*x)
-points(x,y, col = "red")
+abline(fit, col = 'red')
+
+x1 <- seq(0,80, by = 0.1)
+y1 <- exp(-1.1235)*x1^(-0.812)
+plot(x$Tau, x$k2)
+points(x1,y1, col = "red", type = 'l')
+
+
+tiff(filename = "figures/TP_K_Tau_plot.tiff", height=3600, width=3600, units= "px", res=800, compression= "lzw")
+
+plot((x$Tau), (x$k2), log = 'xy', pch = 16, 
+     xlab = expression(paste("Water Residence Time, ", tau, " (d)")), 
+     ylab = expression(paste("TP Rate Constant, k ( ", d^-1, ")")))
+points(x1,y1, col = "red", type = 'l')
+text(4,0.001, expression(bold(paste("k = 0.33", tau)^-0.81)), cex = 0.8)
+text(4,0.00055, expression(bold(paste(" ",R^2, " = 0.32, p < 0.001"))), cex = 0.8)
+
+dev.off()
+
+
+
+
+
+## calculate k (rate constant) SRP
+x$k2 <- -(log(1-(x$SRP_Retention_percent/100))/x$Tau)
+
+plot(log(x$Tau), log(x$k2))
+fit <- lm(log(x$k2) ~ log(x$Tau))
+summary(fit)
+abline(fit, col = 'red')
+
+x1 <- seq(0,80, by = 0.1)
+y1 <- exp(-1.54)*x1^(-0.532)
+plot(x$Tau, x$k2)
+points(x1,y1, col = "red", type = 'l')
+
+
+tiff(filename = "figures/SRP_K_Tau_plot.tiff", height=3600, width=3600, units= "px", res=800, compression= "lzw")
+
+plot((x$Tau), (x$k2), log = 'xy', pch = 16, 
+     xlab = expression(paste("Water Residence Time, ", tau, " (d)")), 
+     ylab = expression(paste("SRP Rate Constant, k ( ", d^-1, ")")))
+points(x1,y1, col = "red", type = 'l')
+text(4,0.002, expression(bold(paste("k = 0.21", tau)^-0.53)), cex = 0.8)
+text(4,0.001, expression(bold(paste(" ",R^2, " = 0.15, p < 0.001"))), cex = 0.8)
+
+dev.off()
+
+
+
+
+
+
+
+
+
