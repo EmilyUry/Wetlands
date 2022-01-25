@@ -193,9 +193,60 @@ dev.off()
 
 
 
+### look at p sink/source behavior based on flow and flow anomaly
+
+## Figure 2. P retention by flow
+
+par(mfrow = c(2,2), mar = c(4,5,1,1))
+
+plot(x$Inflow_m3_yr, x$TP_Retention_percent, log = 'x', pch = 16,
+     ylim = c(-200,100),  
+     ylab = "TP Retention %", xlab = "Inflow (m3/yr)")
+abline(h=0, col = 'red')
+
+plot(x$Inflow_m3_yr, x$SRP_Retention_percent, log = 'x', pch = 16,
+     ylim = c(-200,100),  
+     ylab = "SRP Retention %", xlab = "Inflow (m3/yr)")
+abline(h=0, col = 'red')
 
 
 
+
+## calculate flow anomaly
+library(tidyverse)
+
+Flow <- aggregate(Inflow_m3_yr ~ Source + WetlandID, data = x, FUN = mean) %>%
+        mutate(Unique_ID = paste(Source, WetlandID))
+names(Flow)[3] <- "mean_flow"
+
+wetlands <- x %>%
+        mutate(Unique_ID = paste(Source, WetlandID)) %>%
+        group_by(Unique_ID) %>%
+        summarize(num = n()) %>%
+        filter(num > 1) %>%
+        left_join(Flow, by = "Unique_ID") %>%
+        select(c('Source', 'WetlandID', 'mean_flow'))
+
+data <- x %>%
+        left_join(wetlands, by = c("Source", "WetlandID")) %>%
+        mutate(flow_anom = Inflow_m3_yr - mean_flow)
+data <- data[-c(98:107),]
+data <- data[-c(54:82),]
+
+par(mfrow = c(1,1))
+plot(data$flow_anom, data$TP_Retention_percent,
+     xlim = c(-50000, 50000), ylim = c(-150,150),
+     xlab = "flow anomaly", ylab = "TP Retention %")
+abline(h=0, col = 'red')
+abline(v=0, col = 'blue')
+
+
+
+
+plot(x$Inflow_m3_yr, x$TP_Retention_percent, log = 'x', pch = 16,
+ylim = c(-200,100),  col = as.factor(x$WetlandID),
+ylab = "TP Retention %", xlab = "Inflow (m3/yr)")
+abline(h=0, col = 'red')
 
 
 
