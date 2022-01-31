@@ -230,7 +230,7 @@ wetlands <- x %>%
 data <- x %>%
         left_join(wetlands, by = c("Source", "WetlandID")) %>%
         mutate(flow_anom = Inflow_m3_yr - mean_flow)
-data <- data[-c(98:107),]
+data <- data[-c(98:107),]                              ###### a bunch of rows report the average flow for all yrs. need to remove these
 data <- data[-c(54:82),]
 
 par(mfrow = c(1,1))
@@ -242,6 +242,31 @@ abline(v=0, col = 'blue')
 
 
 
+
+
+plot(data$flow_anom, data$TP_Retention_percent, pch = 16, col = as.factor(x$Wetland_Type),
+     xlim = c(-50000, 50000), ylim = c(-150,150),
+     xlab = "flow anomaly", ylab = "TP Retention %")
+abline(h=0, col = 'red')
+abline(v=0, col = 'blue')
+legend("bottomright", c("Constructed", "Mesocosm", "Natural", "Restored"), pch = 16, col = c(1,2,3,4))
+
+
+
+plot(data$flow_anom, data$SRP_Retention_percent, 
+     xlim = c(-50000, 50000), ylim = c(-150,150),
+     xlab = "flow anomaly", ylab = "SRP Retention %")
+abline(h=0, col = 'red')
+abline(v=0, col = 'blue')
+
+
+
+
+
+
+
+################################################
+### junk code
 
 plot(x$Inflow_m3_yr, x$TP_Retention_percent, log = 'x', pch = 16,
 ylim = c(-200,100),  col = as.factor(x$WetlandID),
