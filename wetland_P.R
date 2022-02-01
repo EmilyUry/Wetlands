@@ -164,15 +164,40 @@ dev.off()
 
 
 
+### plot both together
 
+plot((x$Tau), (x$k2), log = 'xy', pch = 16, 
+     xlab = expression(paste("Water Residence Time, ", tau, " (d)")), 
+     ylab = expression(paste("TP Rate Constant, k ( ", d^-1, ")")))
+x1 <- seq(0,80, by = 0.1)
+y1 <- exp(-1.1235)*x1^(-0.812)
+points(x1,y1, col = "black", type = 'l')
+text(4,0.001, expression(bold(paste("k = 0.33", tau)^-0.81)), cex = 0.8)
+text(4,0.00055, expression(bold(paste(" ",R^2, " = 0.32, p < 0.001"))), cex = 0.8)
+
+x$k3 <- -(log(1-(x$SRP_Retention_percent/100))/x$Tau)
+points((x$Tau), (x$k3), log = 'xy', pch = 16, col = "red",
+       xlab = expression(paste("Water Residence Time, ", tau, " (d)")), 
+       ylab = expression(paste("SRP Rate Constant, k ( ", d^-1, ")")))
+x1 <- seq(0,80, by = 0.1)
+y1 <- exp(-1.54)*x1^(-0.532)
+points(x1,y1, col = "red", type = 'l')
 
 ## calculate k (rate constant) SRP
-x$k2 <- -(log(1-(x$SRP_Retention_percent/100))/x$Tau)
+x$k3 <- -(log(1-(x$SRP_Retention_percent/100))/x$Tau)
+
+
+plot(x$Tau, x$k3, xlab = "TP", ylab = "SRP")
+fit <- lm(x$k3 ~ x$k2)
+abline(fit)
+summary(fit)  ### for sinks, comparable removal rate TP SRP
+
+
 
 plot(log(x$Tau), log(x$k2))
-fit <- lm(log(x$k2) ~ log(x$Tau))
-summary(fit)
-abline(fit, col = 'red')
+fit2 <- lm(log(x$k2) ~ log(x$Tau))
+summary(fit2)
+abline(fit2, col = 'red')
 
 x1 <- seq(0,80, by = 0.1)
 y1 <- exp(-1.54)*x1^(-0.532)
@@ -227,15 +252,18 @@ wetlands <- x %>%
         left_join(Flow, by = "Unique_ID") %>%
         select(c('Source', 'WetlandID', 'mean_flow'))
 
+### look at flow anomaly as percent
+
+
 data <- x %>%
         left_join(wetlands, by = c("Source", "WetlandID")) %>%
-        mutate(flow_anom = Inflow_m3_yr - mean_flow)
+        mutate(flow_anom = (Inflow_m3_yr - mean_flow)/mean_flow)
 data <- data[-c(98:107),]                              ###### a bunch of rows report the average flow for all yrs. need to remove these
 data <- data[-c(54:82),]
 
 par(mfrow = c(1,1))
 plot(data$flow_anom, data$TP_Retention_percent,
-     xlim = c(-50000, 50000), ylim = c(-150,150),
+     xlim = c(-1, 1), ylim = c(-150,150),
      xlab = "flow anomaly", ylab = "TP Retention %")
 abline(h=0, col = 'red')
 abline(v=0, col = 'blue')
