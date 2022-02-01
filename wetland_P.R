@@ -5,7 +5,9 @@
 
 setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files/Wetland_P_Analysis/")
 
-x <- read.csv("Wetland_P_Toy_Data2.csv", header = T)
+
+### data set up
+{x <- read.csv("Wetland_P_Toy_Data2.csv", header = T)
 head(x)
 
 ## omit rows with missing concentration data
@@ -30,10 +32,10 @@ x$HLR <- x$Inflow_m3_yr/x$Area_m2
 ### mass removed
 x$TP_retention <- x$TP_load_in_g_m2_yr - x$TP_load_out
 x$SRP_retention <- x$SRP_load_in_g_m2_yr - x$SRP_load_out
-
+}
 
 ## Figure 1. P retention by wetland type
-
+{
 par(mfrow = c(2,2), mar = c(4,5,1,1))
 boxplot(TP_retention ~ Wetland_Type, data = x, ylim = c(-25,125), 
         ylab = "TP retention g/m2/yr")
@@ -47,11 +49,11 @@ boxplot(SRP_Retention_percent ~ Wetland_Type, data = x, ylim = c(-200,100),
 
 ## note, one data point for TP and 5 for SRP not shown because they are below -200% retention
 ## note the distribution of wetland type:
-table(x$Wetland_Type)
+table(x$Wetland_Type)}
 
 
 ## Figure 2. P retention by load in
-
+{
 par(mfrow = c(2,2), mar = c(4,5,1,1))
 
 plot(x$TP_load_in_g_m2_yr, x$TP_Retention_percent, 
@@ -95,12 +97,11 @@ plot(x$TP_Inflow_mg_L, x$TP_Retention_percent, log = "x",
 plot(x$SRP_Inflow_mg_L, x$SRP_Retention_percent, log = "x",
      ylim = c(-200,100),
      ylab = "SRP Retention %", xlab = "[SRP] (mg/L)")
-
-
+}
 
 
 ## fred's figures: K ~ tau
-par(mfrow = c(1,1))
+{par(mfrow = c(1,1))
 
 ## calculate Tau
 #x <- x[which(x$Area_m2 < 500000),]
@@ -128,13 +129,9 @@ text(100, 40, "R2 = 0.045, p = 0.011")
 ## The SA~Tau relationship from this data set is very weak,
 ## we will use the relationship from Cheng and Basu 2017 Eq. 13
 
-
-
 x$Tau <- 1.51*x$Area_m2^0.23
 points(x$Area_m2, x$Tau, type ='l')
 hist(x$Tau)
-
-
 
 
 ## calculate k (rate constant) TP
@@ -215,13 +212,13 @@ text(4,0.002, expression(bold(paste("k = 0.21", tau)^-0.53)), cex = 0.8)
 text(4,0.001, expression(bold(paste(" ",R^2, " = 0.15, p < 0.001"))), cex = 0.8)
 
 dev.off()
-
+}
 
 
 ### look at p sink/source behavior based on flow and flow anomaly
 
 ## Figure 2. P retention by flow
-
+{
 par(mfrow = c(2,2), mar = c(4,5,1,1))
 
 plot(x$Inflow_m3_yr, x$TP_Retention_percent, log = 'x', pch = 16,
@@ -233,7 +230,6 @@ plot(x$Inflow_m3_yr, x$SRP_Retention_percent, log = 'x', pch = 16,
      ylim = c(-200,100),  
      ylab = "SRP Retention %", xlab = "Inflow (m3/yr)")
 abline(h=0, col = 'red')
-
 
 
 
@@ -257,35 +253,93 @@ wetlands <- x %>%
 
 data <- x %>%
         left_join(wetlands, by = c("Source", "WetlandID")) %>%
-        mutate(flow_anom = (Inflow_m3_yr - mean_flow)/mean_flow)
+        mutate(flow_anom = (Inflow_m3_yr - mean_flow)/mean_flow*100)
 data <- data[-c(98:107),]                              ###### a bunch of rows report the average flow for all yrs. need to remove these
 data <- data[-c(54:82),]
 
 par(mfrow = c(1,1))
-plot(data$flow_anom, data$TP_Retention_percent,
-     xlim = c(-1, 1), ylim = c(-150,150),
+plot(data$flow_anom, data$TP_Retention_percent, pch = 16,
+     xlim = c(-100,100), ylim = c(-150,150),
+     xlab = "flow anomaly (% of mean flow)", ylab = "TP Retention %")
+abline(h=0, col = 'red', lwd =2)
+abline(v=0, col = 'blue', lwd = 2)
+
+
+plot(data$flow_anom, data$TP_Retention_percent, pch = 16,
+     xlim = c(-100, 100), ylim = c(-150,150),
      xlab = "flow anomaly", ylab = "TP Retention %")
-abline(h=0, col = 'red')
-abline(v=0, col = 'blue')
+abline(h=0, col = 'red', lwd =2)
+abline(v=0, col = 'blue', lwd = 2)
+#legend("bottomright", c("Constructed", "Mesocosm", "Natural", "Restored"), pch = 16, col = c(1,2,3,4))
+
+}
+
+
+### Figure. TP Retention vs SRP Retention (colored by flow anomally)
+
+{
+data2 <- x %>%
+        left_join(wetlands, by = c("Source", "WetlandID")) %>%
+        mutate(flow_anom = (Inflow_m3_yr - mean_flow)/mean_flow*100)
+        
+plot(data2$SRP_Retention_percent, data2$TP_Retention_percent,
+     xlim = c(-250, 105), 
+     ylim = c(-150, 105), 
+     xlab = "SRP % Retention",
+     ylab = "TP % Retention")
+abline(h=0, col = 'red', lwd =2)
+abline(v=0, col = 'blue', lwd = 2)
+
+
+
+## red - blue palette
+hist(data2$flow_anom)
+rbPal <- colorRampPalette(c('red','blue'))
+data2$col <- paste(rbPal(10)[as.numeric(cut(data2$flow_anom, breaks = 10))], "85", sep = "")
+data2 <- data2 %>%
+        mutate(col = replace(col, col == "NA85", "#8a8a8a")) %>%
+        mutate(col = replace(col, flow_anom == 0, "#8a8a8a")) 
+
+plot(data2$SRP_Retention_percent, data2$TP_Retention_percent, 
+     pch = 16,
+     cex = abs(data2$flow_anom)/30+1,
+     col = data2$col,
+     xlim = c(-250, 105), 
+     ylim = c(-150, 105), 
+     xlab = "SRP % Retention",
+     ylab = "TP % Retention")
+abline(1,1)
+abline(h=0, col = 'gray50', lwd =1, lty = 2)
+abline(v=0, col = 'gray30', lwd = 1, lty = 2)
+
+
+
+## Red/Blue binary
+data2 <- data2 %>%
+        mutate(col = replace(col, col == "NA85", "#8a8a8a")) %>%
+        mutate(col = replace(col, flow_anom == 0, "#8a8a8a")) %>%
+        mutate(col = replace(col, flow_anom < 0, "#FF000085")) %>%
+        mutate(col = replace(col, flow_anom > 0, "#0000FF85")) 
+
+plot(data2$SRP_Retention_percent, data2$TP_Retention_percent, 
+     pch = 16,
+     cex = abs(data2$flow_anom)/30+1,
+     col = data2$col,
+     xlim = c(-250, 105), 
+     ylim = c(-150, 105), 
+     xlab = "SRP % Retention",
+     ylab = "TP % Retention")
+abline(1,1)
+abline(h=0, col = 'gray50', lwd =1, lty = 2)
+abline(v=0, col = 'gray30', lwd = 1, lty = 2)
+
+        
+        
+}
 
 
 
 
-
-plot(data$flow_anom, data$TP_Retention_percent, pch = 16, col = as.factor(x$Wetland_Type),
-     xlim = c(-50000, 50000), ylim = c(-150,150),
-     xlab = "flow anomaly", ylab = "TP Retention %")
-abline(h=0, col = 'red')
-abline(v=0, col = 'blue')
-legend("bottomright", c("Constructed", "Mesocosm", "Natural", "Restored"), pch = 16, col = c(1,2,3,4))
-
-
-
-plot(data$flow_anom, data$SRP_Retention_percent, 
-     xlim = c(-50000, 50000), ylim = c(-150,150),
-     xlab = "flow anomaly", ylab = "SRP Retention %")
-abline(h=0, col = 'red')
-abline(v=0, col = 'blue')
 
 
 
