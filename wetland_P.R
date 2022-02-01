@@ -320,7 +320,7 @@ data2 <- data2 %>%
         mutate(col = replace(col, flow_anom == 0, "#8a8a8a")) %>%
         mutate(col = replace(col, flow_anom < 0, "#FF000085")) %>%
         mutate(col = replace(col, flow_anom > 0, "#0000FF85")) 
-
+data2$flow_anom[is.na(data2$flow_anom)] <- 0
 plot(data2$SRP_Retention_percent, data2$TP_Retention_percent, 
      pch = 16,
      cex = abs(data2$flow_anom)/30+1,
@@ -332,14 +332,39 @@ plot(data2$SRP_Retention_percent, data2$TP_Retention_percent,
 abline(1,1)
 abline(h=0, col = 'gray50', lwd =1, lty = 2)
 abline(v=0, col = 'gray30', lwd = 1, lty = 2)
-
+legend("bottomright", c("High flow year", "Low flow year"), pch = 16,
+       pt.cex = 2, col = c("#0000FF85","#FF000085"))
         
         
 }
 
 
 
+### wetland size and flow anomaly
 
+plot(data2$Area_m2, data2$TP_Retention_percent, col = data2$col,
+     log = "x", 
+     ylim = c(-200, 105),
+     pch = 16, 
+     cex = abs(data2$flow_anom)/30+1,
+     xlab = "Wetland area (m2)", 
+     ylab = "TP % Retention")
+abline(h=0, lty = 2)
+legend("bottomright", c("High flow year", "Low flow year"), pch = 16,
+       pt.cex = 2, col = c("#0000FF85","#FF000085"))
+
+
+
+plot(data2$Area_m2, data2$SRP_Retention_percent, col = data2$col,
+     log = "x", 
+     ylim = c(-200, 105),
+     pch = 16, 
+     cex = abs(data2$flow_anom)/30+1,
+     xlab = "Wetland area (m2)", 
+     ylab = "SRP % Retention")
+abline(h=0, lty = 2)
+legend("bottomright", c("High flow year", "Low flow year"), pch = 16,
+       pt.cex = 2, col = c("#0000FF85","#FF000085"))
 
 
 
