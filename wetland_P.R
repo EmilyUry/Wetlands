@@ -400,6 +400,33 @@ legend("bottomleft", c("None specified", "continuous, constant", "continuous, va
 
 
 
+plot(data2$Inflow_m3_yr, data2$TP_Retention_percent, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb")[data2$Water_regime],
+     log = "x", 
+     ylim = c(-200, 105),
+     pch = 16, 
+     cex = 1.5,
+     xlab = "Flow (m3/year)", 
+     ylab = "TP % Retention")
+abline(h=0, lty = 2)
+legend("bottomleft", c("None specified", "continuous, constant", "continuous, variable", "intermittent, constant", "intermittent, variable"), pch = 16,
+       pt.cex = 2, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb"))
+
+
+
+plot(data2$Inflow_m3_yr, data2$SRP_Retention_percent, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb")[data2$Water_regime],
+     log = "x", 
+     ylim = c(-200, 105),
+     pch = 16, 
+     cex = 1.5,
+     xlab = "Flow (m3/year)", 
+     ylab = "SRP % Retention")
+abline(h=0, lty = 2)
+legend("bottomleft", c("None specified", "continuous, constant", "continuous, variable", "intermittent, constant", "intermittent, variable"), pch = 16,
+       pt.cex = 2, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb"))
+
+
+
+
 plot(data2$SRP_Retention_percent, data2$TP_Retention_percent, 
      pch = 16,
      cex = 1.5,
@@ -416,6 +443,17 @@ legend("bottomleft", c("Not specified", "continuous, constant", "continuous, var
 
 
 
+
+plot(data2$flow_anom, data2$TP_Retention_percent, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb")[data2$Water_regime],
+     #log = "x", 
+     ylim = c(-200, 105),
+     pch = 16, 
+     cex = 1.5,
+     xlab = "Flow (m3/year)", 
+     ylab = "TP % Retention")
+abline(h=0, lty = 2)
+legend("bottomleft", c("None specified", "continuous, constant", "continuous, variable", "intermittent, constant", "intermittent, variable"), pch = 16,
+       pt.cex = 2, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb"))
 
 
 
