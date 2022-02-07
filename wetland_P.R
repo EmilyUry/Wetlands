@@ -371,6 +371,74 @@ legend("bottomright", c("High flow year", "Low flow year"), pch = 16,
 
 
 
+### Inflow type/ Water regime
+
+plot(data2$Area_m2, data2$TP_Retention_percent, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb")[data2$Water_regime],
+     log = "x", 
+     ylim = c(-200, 105),
+     pch = 16, 
+     cex = 1.5,
+     xlab = "Wetland area (m2)", 
+     ylab = "TP % Retention")
+abline(h=0, lty = 2)
+legend("bottomleft", c("None specified", "continuous, constant", "continuous, variable", "intermittent, constant", "intermittent, variable"), pch = 16,
+       pt.cex = 2, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb"))
+
+
+
+plot(data2$Area_m2, data2$SRP_Retention_percent, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb")[data2$Water_regime],
+     log = "x", 
+     ylim = c(-200, 105),
+     pch = 16, 
+     cex = 1.5,
+     xlab = "Wetland area (m2)", 
+     ylab = "SRP % Retention")
+abline(h=0, lty = 2)
+legend("bottomleft", c("None specified", "continuous, constant", "continuous, variable", "intermittent, constant", "intermittent, variable"), pch = 16,
+       pt.cex = 2, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb"))
+
+
+
+
+plot(data2$SRP_Retention_percent, data2$TP_Retention_percent, 
+     pch = 16,
+     cex = 1.5,
+     col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb")[data2$Water_regime],
+     xlim = c(-250, 105), 
+     ylim = c(-150, 105), 
+     xlab = "SRP % Retention",
+     ylab = "TP % Retention")
+abline(1,1)
+abline(h=0, col = 'gray50', lwd =1, lty = 2)
+abline(v=0, col = 'gray30', lwd = 1, lty = 2)
+legend("bottomleft", c("Not specified", "continuous, constant", "continuous, variable", "intermittent, constant", "intermittent, variable"), pch = 16,
+       pt.cex = 2, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb"))
+
+
+
+
+
+
+
+
+
+
+
+table(data2$Water_regime)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ################################################
 ### junk code
