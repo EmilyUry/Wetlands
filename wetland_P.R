@@ -230,7 +230,7 @@ plot(x$Inflow_m3_yr, x$SRP_Retention_percent, log = 'x', pch = 16,
      ylim = c(-200,100),  
      ylab = "SRP Retention %", xlab = "Inflow (m3/yr)")
 abline(h=0, col = 'red')
-
+}
 
 
 ## calculate flow anomaly
@@ -248,10 +248,11 @@ wetlands <- x %>%
         left_join(Flow, by = "Unique_ID") %>%
         select(c('Source', 'WetlandID', 'mean_flow'))
 
-### look at flow anomaly as percent
 
 
-data <- x %>%
+### look at flow anomaly as percent - missing data dropped
+
+{data <- x %>%
         left_join(wetlands, by = c("Source", "WetlandID")) %>%
         mutate(flow_anom = (Inflow_m3_yr - mean_flow)/mean_flow*100)
 data <- data[-c(98:107),]                              ###### a bunch of rows report the average flow for all yrs. need to remove these
@@ -271,18 +272,18 @@ plot(data$flow_anom, data$TP_Retention_percent, pch = 16,
 abline(h=0, col = 'red', lwd =2)
 abline(v=0, col = 'blue', lwd = 2)
 #legend("bottomright", c("Constructed", "Mesocosm", "Natural", "Restored"), pch = 16, col = c(1,2,3,4))
-
 }
 
 
-### Figure. TP Retention vs SRP Retention (colored by flow anomally)
 
-{
+### Figure. TP Retention vs SRP Retention (colored by flow anomally) (missing data kept)
+
+
 data2 <- x %>%
         left_join(wetlands, by = c("Source", "WetlandID")) %>%
         mutate(flow_anom = (Inflow_m3_yr - mean_flow)/mean_flow*100)
         
-plot(data2$SRP_Retention_percent, data2$TP_Retention_percent,
+{plot(data2$SRP_Retention_percent, data2$TP_Retention_percent,
      xlim = c(-250, 105), 
      ylim = c(-150, 105), 
      xlab = "SRP % Retention",
@@ -342,7 +343,7 @@ legend("bottomright", c("High flow year", "Low flow year"), pch = 16,
 
 ### wetland size and flow anomaly
 
-plot(data2$Area_m2, data2$TP_Retention_percent, col = data2$col,
+{plot(data2$Area_m2, data2$TP_Retention_percent, col = data2$col,
      log = "x", 
      ylim = c(-200, 105),
      pch = 16, 
@@ -365,13 +366,15 @@ plot(data2$Area_m2, data2$SRP_Retention_percent, col = data2$col,
 abline(h=0, lty = 2)
 legend("bottomright", c("High flow year", "Low flow year"), pch = 16,
        pt.cex = 2, col = c("#0000FF85","#FF000085"))
-
+}
 
 
 
 
 
 ### Inflow type/ Water regime
+
+{table(data2$Water_regime)
 
 plot(data2$Area_m2, data2$TP_Retention_percent, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb")[data2$Water_regime],
      log = "x", 
@@ -455,27 +458,75 @@ abline(h=0, lty = 2)
 legend("bottomleft", c("None specified", "continuous, constant", "continuous, variable", "intermittent, constant", "intermittent, variable"), pch = 16,
        pt.cex = 2, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb"))
 
+}
 
 
 
+###  Look at clustering within the same wetland
+## filter to wetlands with 3 or more years of data
+table(data2$WetlandID)
+
+
+d3 <- x %>%
+        left_join(wetlands, by = c("Source", "WetlandID")) %>%
+        mutate(flow_anom = (Inflow_m3_yr - mean_flow)/mean_flow*100) %>%
+        group_by(WetlandID) %>%
+        filter(n()>2) %>% droplevels()
+table(d3$WetlandID)
+
+
+pal <- c("#C0392Bbb", "#E74C3Cbb", "#9B59B6bb", "#7D3C98bb", "#154360bb", "#A9CCE3bb", "#3498DBbb",
+        "#0E6251bb", "#A3E4D7bb", "#16A085bb", "#27AE60bb", "#2ECC71bb", "#9A7D0Abb", "#F4D03Fbb", 
+        "#F39C12bb", "#EB984Ebb", "#784212bb", "#D35400bb", "#BDC3C7bb", "#34495Ebb", "#17202Abb",
+        "#000000bb")
+
+plot(d3$SRP_Retention_percent, d3$TP_Retention_percent,
+     col = pal[as.factor(d3$WetlandID)], pch = 16, 
+     #cex = abs(d3$flow_anom)/30+1,
+     cex=1.5,
+      xlim = c(-250, 105), 
+      ylim = c(-150, 105), 
+      xlab = "SRP % Retention",
+      ylab = "TP % Retention")
+        abline(h=0,  lty =2)
+        abline(v=0,  lty= 2)
+        abline(1,1)
 
 
 
-
-table(data2$Water_regime)
-
-
-
-
-
-
+d4 <- x %>%
+        left_join(wetlands, by = c("Source", "WetlandID")) %>%
+        mutate(flow_anom = (Inflow_m3_yr - mean_flow)/mean_flow*100) %>%
+        group_by(WetlandID) %>%
+        filter(n()>3) %>% droplevels()
+table(d4$WetlandID)
 
 
+pal <- c("#C0392Bbb", "#E74C3Cbb", "#9B59B6bb", "#7D3C98bb", "#154360bb", "#A9CCE3bb", "#3498DBbb",
+         "#0E6251bb", "#A3E4D7bb", "#16A085bb", "#27AE60bb", "#2ECC71bb", "#9A7D0Abb", "#F4D03Fbb", 
+         "#F39C12bb", "#EB984Ebb", "#784212bb", "#D35400bb", "#BDC3C7bb", "#34495Ebb", "#17202Abb",
+         "#000000bb")
+
+pal <- c("#E74C3Cbb",  "#8E44ADbb", "#154360bb", "#3498DBbb",
+         "#27AE60bb", "#196F3Dbb",  
+         "#F39C12bb", "#D35400bb", "#784212bb",  "#17202Add")
 
 
 
-
-
+plot(d4$SRP_Retention_percent, d4$TP_Retention_percent,
+     col = pal[as.factor(d4$WetlandID)], pch = 16, 
+     #cex = abs(d3$flow_anom)/30+1,
+     cex=1.5,
+     xlim = c(-250, 105), 
+     ylim = c(-550, 105), 
+     xlab = "SRP % Retention",
+     ylab = "TP % Retention")
+abline(h=0,  lty =2)
+abline(v=0,  lty= 2)
+abline(1,1)
+legend("bottomright", c("BogBurn", "CLake", "Hidvegi", "Listow1", 
+                       "Listow2", "Listow3", "Listow4", "Listow5", 
+                       "Toenepi", "WPoldor"), pch = 16,  col = pal, pt.cex = 1.5)
 
 
 ################################################
