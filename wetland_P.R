@@ -517,8 +517,8 @@ plot(d4$SRP_Retention_percent, d4$TP_Retention_percent,
      col = pal[as.factor(d4$WetlandID)], pch = 16, 
      #cex = abs(d3$flow_anom)/30+1,
      cex=1.5,
-     xlim = c(-250, 105), 
-     ylim = c(-550, 105), 
+     xlim = c(-300, 105), 
+     ylim = c(-850, 105), 
      xlab = "SRP % Retention",
      ylab = "TP % Retention")
 abline(h=0,  lty =2)
@@ -527,7 +527,26 @@ abline(1,1)
 legend("bottomright", c("BogBurn", "CLake", "Hidvegi", "Listow1", 
                        "Listow2", "Listow3", "Listow4", "Listow5", 
                        "Toenepi", "WPoldor"), pch = 16,  col = pal, pt.cex = 1.5)
+text(d4$SRP_Retention_percent, d4$TP_Retention_percent, d4$Data_Year,
+     cex = 0.7, pos =1)
 
+
+plot(d4$SRP_Retention_percent, d4$TP_Retention_percent,
+     col = pal[as.factor(d4$WetlandID)], pch = 16, 
+     #cex = abs(d3$flow_anom)/30+1,
+     cex=1.5,
+     xlim = c(-250, 105), 
+     ylim = c(-300, 105), 
+     xlab = "SRP % Retention",
+     ylab = "TP % Retention")
+abline(h=0,  lty =2)
+abline(v=0,  lty= 2)
+abline(1,1)
+legend("bottomright", c("BogBurn", "CLake", "Hidvegi", "Listow1", 
+                        "Listow2", "Listow3", "Listow4", "Listow5", 
+                        "Toenepi", "WPoldor"), pch = 16,  col = pal, pt.cex = 1.5)
+text(d4$SRP_Retention_percent, d4$TP_Retention_percent, d4$Data_Year,
+     cex = 0.7, pos =1)
 
 ################################################
 ### junk code
