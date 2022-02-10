@@ -476,16 +476,15 @@ table(d3$WetlandID)
 
 
 pal <- c("#C0392Bbb", "#E74C3Cbb", "#9B59B6bb", "#7D3C98bb", "#154360bb", "#A9CCE3bb", "#3498DBbb",
-        "#0E6251bb", "#A3E4D7bb", "#16A085bb", "#27AE60bb", "#2ECC71bb", "#9A7D0Abb", "#F4D03Fbb", 
-        "#F39C12bb", "#EB984Ebb", "#784212bb", "#D35400bb", "#BDC3C7bb", "#34495Ebb", "#17202Abb",
-        "#000000bb")
+         "#0E6251bb", "#A3E4D7bb", "#16A085bb", "#27AE60bb", "#2ECC71bb", "#9A7D0Abb", "#F4D03Fbb", 
+         "#F39C12bb", "#EB984Ebb", "#784212bb", "#D35400bb", "#34495Ebb", "#17202Abb")
 
 plot(d3$SRP_Retention_percent, d3$TP_Retention_percent,
      col = pal[as.factor(d3$WetlandID)], pch = 16, 
      #cex = abs(d3$flow_anom)/30+1,
      cex=1.5,
       xlim = c(-250, 105), 
-      ylim = c(-150, 105), 
+      ylim = c(-350, 105), 
       xlab = "SRP % Retention",
       ylab = "TP % Retention")
         abline(h=0,  lty =2)
@@ -502,10 +501,6 @@ d4 <- x %>%
 table(d4$WetlandID)
 
 
-pal <- c("#C0392Bbb", "#E74C3Cbb", "#9B59B6bb", "#7D3C98bb", "#154360bb", "#A9CCE3bb", "#3498DBbb",
-         "#0E6251bb", "#A3E4D7bb", "#16A085bb", "#27AE60bb", "#2ECC71bb", "#9A7D0Abb", "#F4D03Fbb", 
-         "#F39C12bb", "#EB984Ebb", "#784212bb", "#D35400bb", "#BDC3C7bb", "#34495Ebb", "#17202Abb",
-         "#000000bb")
 
 pal <- c("#E74C3Cbb",  "#8E44ADbb", "#154360bb", "#3498DBbb",
          "#27AE60bb", "#196F3Dbb",  
@@ -547,6 +542,65 @@ legend("bottomright", c("BogBurn", "CLake", "Hidvegi", "Listow1",
                         "Toenepi", "WPoldor"), pch = 16,  col = pal, pt.cex = 1.5)
 text(d4$SRP_Retention_percent, d4$TP_Retention_percent, d4$Data_Year,
      cex = 0.7, pos =1)
+
+
+
+
+
+#### wetlands with 4 or more years of data. + Titoki, East poldor and Lake Apopka (3 years each, but negative retention)
+
+d34 <- x %>%
+        left_join(wetlands, by = c("Source", "WetlandID")) %>%
+        mutate(flow_anom = (Inflow_m3_yr - mean_flow)/mean_flow*100) %>%
+        filter(WetlandID == "Titoki" | WetlandID == "East poldor" | WetlandID == "Lake Apopka Marsh") %>% droplevels()
+table(d34$WetlandID)
+
+d34 <- d4 %>%
+        merge(d34, all = TRUE)
+
+pal <- c("#E74C3Cbb",  "#8E44ADbb", "#154360bb", "#3498DBbb",
+         "#27AE60bb", "#196F3Dbb",  
+         "#F39C12bb", "#D35400bb", "#784212bb",  "#17202Add", 
+         "#eb1370bb", "#2af520bb", "#340e80bb" )
+
+plot(d34$SRP_Retention_percent, d34$TP_Retention_percent,
+     col = pal[as.factor(d34$WetlandID)], pch = 16, 
+     #cex = abs(d3$flow_anom)/30+1,
+     cex=1.5,
+     xlim = c(-250, 105), 
+     ylim = c(-300, 105), 
+     xlab = "SRP % Retention",
+     ylab = "TP % Retention")
+abline(h=0,  lty =2)
+abline(v=0,  lty= 2)
+abline(1,1)
+legend("bottomright", c("BogBurn", "CLake", "Hidvegi", "Listow1", 
+                        "Listow2", "Listow3", "Listow4", "Listow5", 
+                        "Toenepi", "WPoldor", "EPoldor", "LApopka", "Titoki"), pch = 16,  col = pal, pt.cex = 1.5)
+text(d34$SRP_Retention_percent, d34$TP_Retention_percent, d4$Data_Year,
+     cex = 0.7, pos =1)
+
+
+
+
+
+
+### retention based on inflow concentration
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ################################################
 ### junk code
