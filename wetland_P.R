@@ -161,27 +161,31 @@ dev.off()
 
 
 
+
+
 ### plot both together
 
 plot((x$Tau), (x$k2), log = 'xy', pch = 16, 
      xlab = expression(paste("Water Residence Time, ", tau, " (d)")), 
-     ylab = expression(paste("TP Rate Constant, k ( ", d^-1, ")")))
+     ylab = expression(paste("Rate Constant, k ( ", d^-1, ")")))
 x1 <- seq(0,80, by = 0.1)
 y1 <- exp(-1.1235)*x1^(-0.812)
 points(x1,y1, col = "black", type = 'l')
-text(4,0.001, expression(bold(paste("k = 0.33", tau)^-0.81)), cex = 0.8)
+text(4,0.001, expression(bold(paste("TP, k = 0.33", tau)^-0.81)), cex = 0.8)
 text(4,0.00055, expression(bold(paste(" ",R^2, " = 0.32, p < 0.001"))), cex = 0.8)
 
-x$k3 <- -(log(1-(x$SRP_Retention_percent/100))/x$Tau)
-points((x$Tau), (x$k3), log = 'xy', pch = 16, col = "red",
-       xlab = expression(paste("Water Residence Time, ", tau, " (d)")), 
-       ylab = expression(paste("SRP Rate Constant, k ( ", d^-1, ")")))
-x1 <- seq(0,80, by = 0.1)
-y1 <- exp(-1.54)*x1^(-0.532)
-points(x1,y1, col = "red", type = 'l')
+
 
 ## calculate k (rate constant) SRP
 x$k3 <- -(log(1-(x$SRP_Retention_percent/100))/x$Tau)
+
+points((x$Tau), (x$k3), log = 'xy', pch = 16, col = "red")
+x1 <- seq(0,80, by = 0.1)
+y1 <- exp(-1.54)*x1^(-0.532)
+points(x1,y1, col = "red", type = 'l')
+text(48,0.5, expression(bold(paste("SRP, k = 0.21", tau)^-0.53)), cex = 0.8, col = 'red')
+text(48,0.3, expression(bold(paste(" ",R^2, " = 0.15, p < 0.001"))), cex = 0.8, col = 'red')
+
 
 
 plot(x$Tau, x$k3, xlab = "TP", ylab = "SRP")
@@ -191,8 +195,8 @@ summary(fit)  ### for sinks, comparable removal rate TP SRP
 
 
 
-plot(log(x$Tau), log(x$k2))
-fit2 <- lm(log(x$k2) ~ log(x$Tau))
+plot(log(x$Tau), log(x$k3))
+fit2 <- lm(log(x$k3) ~ log(x$Tau))
 summary(fit2)
 abline(fit2, col = 'red')
 
@@ -214,6 +218,31 @@ text(4,0.001, expression(bold(paste(" ",R^2, " = 0.15, p < 0.001"))), cex = 0.8)
 dev.off()
 }
 
+
+
+
+
+
+
+### only positive retention sites
+{y <- x[which(x$TP_Retention_percent >= 0 & x$SRP_Retention_percent >= 0),]
+
+plot(log(y$Tau), log(y$k2))
+fit <- lm(log(y$k2) ~ log(y$Tau))
+summary(fit)
+abline(fit, col = 'red')
+
+x1 <- seq(0,80, by = 0.1)
+y1 <- exp(-1.4216)*x1^(-0.6281)
+plot(x$Tau, x$k2)
+points(x1,y1, col = "red", type = 'l')
+
+plot((y$Tau), (y$k2), log = 'xy', pch = 16, 
+     xlab = expression(paste("Water Residence Time, ", tau, " (d)")), 
+     ylab = expression(paste("TP Rate Constant, k ( ", d^-1, ")")))
+points(x1,y1, col = "red", type = 'l')
+text(4,0.003, expression(bold(paste("k = 0.24", tau)^-0.62)), cex = 0.8)
+text(4,0.002, expression(bold(paste(" ",R^2, " = 0.25, p < 0.001"))), cex = 0.8)}
 
 ### look at p sink/source behavior based on flow and flow anomaly
 
@@ -587,8 +616,18 @@ text(d34$SRP_Retention_percent, d34$TP_Retention_percent, d4$Data_Year,
 
 ### retention based on inflow concentration
 
+options(scipen = 100) ## gets out of scientific notation
 
 
+plot(data2$SRP_Inflow_mg_L, data2$SRP_Retention_percent, log = "x",
+     ylim =c(-300, 100), 
+     ylab = "SRP % retention", xlab = "Inflow [SRP] (mg/L)",
+     pch = 16,
+     cex = 1.5,
+     col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb")[data2$Water_regime])
+abline(h=0, lty = 2)
+legend("bottomright", c("None specified", "continuous, constant", "continuous, variable", "intermittent, constant", "intermittent, variable"), pch = 16,
+       pt.cex = 2, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb"))
 
 
 
