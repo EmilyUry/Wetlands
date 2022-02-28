@@ -4,7 +4,9 @@
 
 
 setwd("C:/Users/Emily Ury/OneDrive - University of Waterloo/Wetlands_local/Data_files/Wetland_P_Analysis/")
-
+library(viridis)
+library(dplyr)
+library(tidyr)
 
 ### data set up
 {x <- read.csv("Wetland_P_Toy_Data2.csv", header = T)
@@ -626,7 +628,19 @@ plot(data2$SRP_Inflow_mg_L, data2$SRP_Retention_percent, log = "x",
      cex = 1.5,
      col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb")[data2$Water_regime])
 abline(h=0, lty = 2)
-legend("bottomright", c("None specified", "continuous, constant", "continuous, variable", "intermittent, constant", "intermittent, variable"), pch = 16,
+legend("bottomright", c("Not specified", "continuous, constant", "continuous, variable", "intermittent, constant", "intermittent, variable"), pch = 16,
+       pt.cex = 2, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb"))
+
+
+
+plot(data2$TP_Inflow_mg_L, data2$TP_Retention_percent, log = "x",
+     ylim =c(-300, 100), 
+     ylab = "TP % retention", xlab = "Inflow [TP] (mg/L)",
+     pch = 16,
+     cex = 1.5,
+     col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb")[data2$Water_regime])
+abline(h=0, lty = 2)
+legend("bottomright", c("Not specified", "continuous, constant", "continuous, variable", "intermittent, constant", "intermittent, variable"), pch = 16,
        pt.cex = 2, col = c("#a1a1a1bb", "#bd4ad4bb","#e34327bb", "#345bebbb", "#2b821fbb"))
 
 
@@ -634,10 +648,77 @@ legend("bottomright", c("None specified", "continuous, constant", "continuous, v
 
 
 
+####
+
+## how many wetlands are always a source?
+
+x$TPbehav <- ifelse(x$TP_Retention_percent > 0, "sink", "source")
+x$SRPbehav <- ifelse(x$SRP_Retention_percent > 0, "sink", "source")
+
+behav <- x %>%
+  select('Source', 'WetlandID', 'Data_Year', 'TPbehav', 'SRPbehav') %>%
+  group_by(WetlandID) %>%
+  filter(n()>1) %>% droplevels() 
+
+n.wet <- behav %>%
+  group_by(WetlandID) %>%
+  summarize(n = n()) 
+TPsi <- behav %>%
+  filter(TPbehav == "sink") %>%
+  group_by(WetlandID) %>%
+  summarize(n.sink = n()) %>%
+  full_join(n.wet) %>%
+  mutate(p.sink = n.sink/n)
+
+TPsi[is.na(TPsi)] <- 0
+table <- as.data.frame(table(TPsi$n, TPsi$p.sink))
+table$Var2 <- as.character(table$Var2)
+table$Var1 <- as.character(table$Var1)
+table$Freq[table$Freq == 0] <- NA
+
+plot(table$Var2, table$Var1, cex = table$Freq/2+1.5, 
+     xlim = c(-0.1,1.2), ylim = c(1.5,5.7), 
+     ylab = "Years", xlab = "Proportion 'sink' behavior", 
+     xaxt = 'n', yaxt = 'n', 
+     pch = 16,
+     col = "#252763", 
+     main = "TP")
+abline(v=0.5, col = "gray70")
+text(as.numeric(table$Var2), as.numeric(table$Var1), table$Freq, cex = 0.8, col = "white")
+axis(1, at = c(0, 0.25, 0.5, 0.75, 1), labels = c(0, 0.25, 0.5, 0.75, 1))
+axis(2, at = c(2,3,4,5), labels = c(2,3,4,5))
+text(0, 5.6, "consistent \n source", font = 2)
+text(1, 5.6, "consistent \n sink", font = 2)
 
 
 
 
+SRPsi <- behav %>%
+  filter(SRPbehav == "sink") %>%
+  group_by(WetlandID) %>%
+  summarize(n.sink = n()) %>%
+  full_join(n.wet) %>%
+  mutate(p.sink = n.sink/n)
+
+SRPsi[is.na(SRPsi)] <- 0
+table <- as.data.frame(table(SRPsi$n, SRPsi$p.sink))
+table$Var2 <- as.character(table$Var2)
+table$Var1 <- as.character(table$Var1)
+table$Freq[table$Freq == 0] <- NA
+
+plot(table$Var2, table$Var1, cex = table$Freq/2+1.5, 
+     xlim = c(-0.1,1.2), ylim = c(1.5,5.7), 
+     ylab = "Years", xlab = "Proportion 'sink' behavior", 
+     xaxt = 'n', yaxt = 'n', 
+     pch = 16,
+     col = "#252763", 
+     main = "SRP")
+abline(v=0.5, col = "gray70")
+text(as.numeric(table$Var2), as.numeric(table$Var1), table$Freq, cex = 0.8, col = "white")
+axis(1, at = c(0, 0.25, 0.5, 0.75, 1), labels = c(0, 0.25, 0.5, 0.75, 1))
+axis(2, at = c(2,3,4,5), labels = c(2,3,4,5))
+text(0, 5.6, "consistent \n source", font = 2)
+text(1, 5.6, "consistent \n sink", font = 2)
 
 
 
