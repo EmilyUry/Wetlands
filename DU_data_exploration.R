@@ -18,5 +18,24 @@ library(viridis)
 
 x <- read.csv("P_flux.csv", head = TRUE)
 
+#######################
+
+## data set-up
+
+## merge multiple inflows for OH, KE, DY; and outflows for FE
+
+table(x$Wetland_ID, x$Station)
+
+x$Flow_volume_m3 <- as.numeric(x$Flow_volume_m3)
+
+Tile <- x %>%
+  group_by(Wetland_ID, Water_year) %>%
+  filter(Station == "Inflow_tile") %>%
+  summarise(Tile_Inflow = sum(Flow_volume_m3))
+
+
+
+## Annual summary
+
 
 
