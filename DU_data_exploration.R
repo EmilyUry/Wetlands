@@ -77,34 +77,98 @@ rem.calcs <- flows.combine %>%
 
 ### Annual summaries
 
+rem.calcs[rem.calcs == -Inf] <- NaN
+rem.calcs[rem.calcs == Inf] <- NaN
 
-
-
+annual.summary <- rem.calcs %>%
+  group_by(Wetland_ID, Water_year) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))
 
 ### Seasonal summaries
 
 
+### Fall = Oct, Nov, Dec; Winter = Jan, Feb, Mar; Spring = Apr, May, Jun; Summer = Jul, Aug, Sep
+Month <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
+           "Sep", "Oct", "Nov", "Dec")
+Season <- c("Winter", "Winter", "Winter", "Spring", "Spring", "Spring", 
+            "Summer", "Summer", "Summer", "Fall", "Fall", "Fall")
+key1 <- data.frame(Month, Season); 
+seasonal.summary1 <- rem.calcs %>%
+  left_join(key1, by = "Month") %>%
+  group_by(Wetland_ID, Water_year, Season) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))
+
+  
+### Seasons 2 -- the way DUCS does it in the report
+### Fall = Oct, Nov; Winter = Dec, Jan; Freshet = Feb, Mar, Apr, May; Summer = Jun, Jul, Aug, Sep
+Season <- c("Winter", "Freshet", "Freshet", "Freshet", "Freshet", "Summer", 
+              "Summer", "Summer", "Summer", "Fall", "Fall", "Winter")
+key2 <- data.frame(Month, Season); rm(Month,Season)
+seasonal.summary2 <- rem.calcs %>%
+  left_join(key2, by = "Month") %>%
+  group_by(Wetland_ID, Water_year, Season) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))
+  
+rm(key1, key2)
+
+### Monthly summaries
+
+test <- rem.calcs %>%
+  group_by(Wetland_ID, Water_year, Month) %>%
+  mutate(max.flow = max(VOL.IN))
+
+monthly.summary <- test %>%
+  group_by(Wetland_ID, Water_year, Month) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE)) %>%
+    mutate(Month = fct_relevel(Month, 
+                            "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr",
+                            "May", "Jun", "Jul", "Aug", "Sep", )) 
 
 
 
-### Montly summaries
+#### data visualization
+library(gridExtra)
+
+OH <- monthly.summary[which(monthly.summary$Wetland_ID == "OH"),]
+plot(OH$Month, OH$TP.IN)
+
+
+flow <- ggplot(OH, aes(x = Month, y = VOL.IN)) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(~Water_year)
+
+TP.in <- ggplot(OH, aes(x = Month, y = TP.IN)) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(~Water_year)
+
+TP.out <- ggplot(OH, aes(x = Month, y = TP.OUT)) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(~Water_year)
+
+TP.ret <- ggplot(OH, aes(x = Month, y = TP.rem.percent)) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(~Water_year) +
+  coord_cartesian(ylim = c(-250,100), clip = "off")
+
+
+grid.arrange(flow, TP.in, TP.out, TP.ret, nrow = 4) 
 
 
 
 
+plot(OH$max.flow, OH$TP.rem.percent)
 
 
+ggplot(monthly.summary, aes(x = VOL.IN, y = SRP.rem.percent)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  facet_wrap(~Wetland_ID, scales = "free")
 
 
-
-
-
-
-
-
-
-
-
+ggplot(monthly.summary, aes(x = max.flow, y = SRP.rem.percent)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  facet_wrap(~Wetland_ID, scales = "free")
 
 
 
