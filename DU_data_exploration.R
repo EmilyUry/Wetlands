@@ -113,11 +113,9 @@ rm(key1, key2)
 
 ### Monthly summaries
 
-test <- rem.calcs %>%
+monthly.summary <- rem.calcs %>%
   group_by(Wetland_ID, Water_year, Month) %>%
-  mutate(max.flow = max(VOL.IN))
-
-monthly.summary <- test %>%
+  mutate(max.flow = max(VOL.IN)) %>%
   group_by(Wetland_ID, Water_year, Month) %>%
   summarise(across(where(is.numeric), mean, na.rm = TRUE)) %>%
     mutate(Month = fct_relevel(Month, 
@@ -172,6 +170,27 @@ ggplot(monthly.summary, aes(x = max.flow, y = SRP.rem.percent)) +
 
 
 
+
+
+
+
+## contributing area 
+
+aux.d <- read.csv("Wetland_Info.csv", head = TRUE)
+names(aux.d)[1] <- "Wetland_ID"
+
+
+data <- monthly.summary %>%
+  left_join(aux.d, by = "Wetland_ID")
+
+data <- annual.summary  %>%
+  left_join(aux.d, by = "Wetland_ID")
+
+
+
+names(data)[39]
+ggplot(data, aes(x = Contributing.Area...Wetland.Area, y = TP.IN, color = as.factor(Water_year))) +
+  geom_point() 
 
 
 
