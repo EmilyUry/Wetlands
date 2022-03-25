@@ -32,6 +32,7 @@ flows.combine <- x %>%
               values_from = c(Flow_volume_m3, TP_kg_day, TDP_kg_day, 
                               SRP_kg_day, PP_kg_day)) %>%
   rowwise() %>%
+  mutate(Precip = Flow_volume_m3_Precipitation) %>%
   mutate(VOL.IN = sum(Flow_volume_m3_Inflow_tile, Flow_volume_m3_Inflow_surface, 
                           Flow_volume_m3_Precipitation, na.rm = TRUE)) %>%
   mutate(VOL.OUT = sum(Flow_volume_m3_Outflow, Flow_volume_m3_Outflow_Leak, na.rm = TRUE)) %>%
@@ -47,7 +48,7 @@ flows.combine <- x %>%
   mutate(PP.IN = sum(PP_kg_day_Inflow_tile, PP_kg_day_Inflow_tile,
                            PP_kg_day_Precipitation, na.rm = TRUE)) %>%
   mutate(PP.OUT = sum(PP_kg_day_Outflow, PP_kg_day_Outflow_Leak, na.rm = TRUE)) %>%
-  select(Wetland_ID, Date, Water_year, Month, Day, VOL.IN, VOL.OUT, TP.IN, TP.OUT,
+  select(Wetland_ID, Date, Water_year, Month, Day, Precip, VOL.IN, VOL.OUT, TP.IN, TP.OUT,
          TDP.IN, TDP.OUT, SRP.IN, SRP.OUT, PP.IN, PP.OUT) 
 
 
@@ -154,6 +155,30 @@ grid.arrange(flow, TP.in, TP.out, TP.ret, nrow = 4)
 
 
 
+
+ggplot(monthly.summary, aes(x = Month, y = TP.rem.percent, group = 1)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(Wetland_ID~Water_year, scales = "free")
+
+ggplot(monthly.summary, aes(x = Month, y = SRP.rem.percent, group = 1)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(Wetland_ID~Water_year, scales = "free")
+
+
+
+ggplot(monthly.summary, aes(x = Month, y = TP.rem, group = 1)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(Wetland_ID~Water_year)
+
+ggplot(monthly.summary, aes(x = Month, y = SRP.rem, group = 1)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(Wetland_ID~Water_year)
+
+
 plot(OH$max.flow, OH$TP.rem.percent)
 
 
@@ -174,11 +199,12 @@ ggplot(monthly.summary, aes(x = max.flow, y = SRP.rem.percent)) +
 
 
 
-## contributing area 
+## Aux data (area, catchment size, sediment P, etc.)
 
 aux.d <- read.csv("Wetland_Info.csv", head = TRUE)
 names(aux.d)[1] <- "Wetland_ID"
-
+names(aux.d) <- c("Wetland_ID", "Name", "Established", "Area", "Volume", "CA",
+                  "CA_WA", "Crop18", "Crop19", "Crop20", "Crop21", "SOM", "SBP", "UBP")
 
 data <- monthly.summary %>%
   left_join(aux.d, by = "Wetland_ID")
@@ -186,11 +212,41 @@ data <- monthly.summary %>%
 data <- annual.summary  %>%
   left_join(aux.d, by = "Wetland_ID")
 
-
+data <- seasonal.summary2  %>%
+  left_join(aux.d, by = "Wetland_ID")
 
 names(data)[39]
 ggplot(data, aes(x = Contributing.Area...Wetland.Area, y = TP.IN, color = as.factor(Water_year))) +
   geom_point() 
+
+
+
+
+
+### report summary 
+## Figure 5 
+ss <- data
+
+ggplot(ss, aes(fill = Wetland_ID, y = TP.rem/Area, x = Season)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  facet_wrap(.~ Water_year) +
+  ylab("TP retention (kg/ha)")
+ggplot(ss, aes(fill = Wetland_ID, y = TDP.rem/Area, x = Season)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  facet_wrap(.~ Water_year)+
+  ylab("TDP retention (kg/ha)")
+ggplot(ss, aes(fill = Wetland_ID, y = SRP.rem/Area, x = Season)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  facet_wrap(.~ Water_year)+
+  ylab("SRP retention (kg/ha)")
+ggplot(ss, aes(fill = Wetland_ID, y = PP.rem/Area, x = Season)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  facet_wrap(.~ Water_year)+
+  ylab("PP retention (kg/ha)")
+
+hist(ss$TP.rem)
+
+summary(ss$TP.rem)
 
 
 
