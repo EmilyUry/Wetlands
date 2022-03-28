@@ -23,6 +23,7 @@ x <- read.csv("P_flux.csv", head = TRUE)
 
 ## data set-up
 x$Water_year <- as.factor(x$Water_year)
+x$Date <- as.Date(x$Date)
 
 ## merge multiple inflows and outflows for volume and solutes
 ##
@@ -38,20 +39,61 @@ flows.combine <- x %>%
   mutate(VOL.IN = sum(Flow_volume_m3_Inflow_tile, Flow_volume_m3_Inflow_surface, 
                           Flow_volume_m3_Precipitation, na.rm = TRUE)) %>%
   mutate(VOL.OUT = sum(Flow_volume_m3_Outflow, Flow_volume_m3_Outflow_Leak, na.rm = TRUE)) %>%
-  mutate(TP.IN = sum(TP_kg_day_Inflow_tile, TP_kg_day_Inflow_tile,
+  mutate(TP.IN = sum(TP_kg_day_Inflow_tile, TP_kg_day_Inflow_surface,
                          TP_kg_day_Precipitation, na.rm = TRUE)) %>%
   mutate(TP.OUT = sum(TP_kg_day_Outflow, TP_kg_day_Outflow_Leak, na.rm = TRUE)) %>%
-  mutate(TDP.IN = sum(TDP_kg_day_Inflow_tile, TDP_kg_day_Inflow_tile,
+  mutate(TDP.IN = sum(TDP_kg_day_Inflow_tile, TDP_kg_day_Inflow_surface,
                            TDP_kg_day_Precipitation, na.rm = TRUE)) %>%
   mutate(TDP.OUT = sum(TDP_kg_day_Outflow, TDP_kg_day_Outflow_Leak, na.rm = TRUE)) %>%  
-  mutate(SRP.IN = sum(SRP_kg_day_Inflow_tile, SRP_kg_day_Inflow_tile,
+  mutate(SRP.IN = sum(SRP_kg_day_Inflow_tile, SRP_kg_day_Inflow_surface,
                            SRP_kg_day_Precipitation, na.rm = TRUE)) %>%
   mutate(SRP.OUT = sum(SRP_kg_day_Outflow, SRP_kg_day_Outflow_Leak, na.rm = TRUE)) %>%
-  mutate(PP.IN = sum(PP_kg_day_Inflow_tile, PP_kg_day_Inflow_tile,
+  mutate(PP.IN = sum(PP_kg_day_Inflow_tile, PP_kg_day_Inflow_surface,
                            PP_kg_day_Precipitation, na.rm = TRUE)) %>%
   mutate(PP.OUT = sum(PP_kg_day_Outflow, PP_kg_day_Outflow_Leak, na.rm = TRUE)) %>%
   select(Wetland_ID, Date, Water_year, Month, Day, Precip, VOL.IN, VOL.OUT, TP.IN, TP.OUT,
          TDP.IN, TDP.OUT, SRP.IN, SRP.OUT, PP.IN, PP.OUT) 
+
+### breif visualization
+
+# Y1 <- flows.combine[which(flows.combine$Water_year == "2019"),]
+# Y2 <- flows.combine[which(flows.combine$Water_year == "2021"),]
+# 
+# ggplot(Y1, aes(Date, TP.IN)) +
+#   geom_point(aes(color = "TP in"), size = 1) + 
+#   geom_point(aes(Date, TP.OUT, color = "TP out"), size = 1)+
+#   scale_color_manual(values = c("#0000FF77", "#FF000066")) +
+#   facet_wrap(.~Wetland_ID, scales = "free" ) +
+#   scale_x_date(name = "2019", date_breaks = "1 month", 
+#                date_labels = c("S", "O", "N","D", "J", "F", "M","A", "M","J", "J", "A"))
+# 
+flows.combine$TP.ret <- flows.combine$TP.IN - flows.combine$TP.OUT
+Y1 <- flows.combine[which(flows.combine$Water_year == "2019"),]
+OH <- Y1[which(Y1$Wetland_ID == "OH"),]
+sum(OH$TP.ret)
+ggplot(OH, aes(Date, TP.IN)) +
+  geom_point(aes(color = "TP in"), size = 1) +
+  geom_point(aes(Date, TP.OUT, color = "TP out"), size = 1)+
+  scale_color_manual(values = c("#0000FF77", "#FF000066")) +
+  scale_x_date(name = "2019", date_breaks = "1 month",
+               date_labels = c("S", "O", "N","D", "J", "F", "M","A", "M","J", "J", "A"))
+
+flows.combine$Precip[is.na(flows.combine$Precip)] <- 0
+plot(flows.combine$Precip, flows.combine$TP.ret)
+fit <- lm(flows.combine$TP.ret ~ flows.combine$Precip)
+abline(fit)
+summary(fit)
+
+## 14 days of preceding rain
+n <- 14
+cs <- cumsum(flows.combine$Precip)
+flows.combine$rain.sum <- c(rep_len(NA, n-1), tail(cs, -(n-1)) - c(0, head(cs, -n)))
+
+plot(flows.combine$rain.sum, flows.combine$TP.OUT)
+fit <- lm(flows.combine$TP.ret ~ flows.combine$rain.sum)
+abline(fit)
+summary(fit)
+
 
 
 ######################
@@ -104,12 +146,35 @@ annual.summary[annual.summary == Inf] <- NaN
 
 data <- annual.summary
 
-plot(data$Precip, data$TP.rem)
-
 ggplot(data, aes(fill = Wetland_ID, y = TP.rem/Area, x = Water_year)) +
   geom_bar(position = "dodge", stat = "identity") + 
   ylab("TP retention (kg/ha)")
 
+ggplot(data, aes(fill = Wetland_ID, y = SRP.rem/Area, x = Water_year)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  ylab("SRP retention (kg/ha)")
+
+
+
+plot(data$Area, data$SRP.rem, pch = 16,  cex = 2,
+     col = c("#F8766D", "#CD9600", "#7CAE00", "#00BE67",
+             "#00BFC4", "#00A9FF", "#C77CFF", "#FF61CC")[data$Wetland_ID],
+     ylab = "SRP retention (kg/year",
+     xlab = "Wetland area (ha)")
+legend("topright", c("BL", "DY", "FE", "KE", "LL", "MA", "MO", "OH"),
+       pch = 16, pt.cex = 2,  ncol = 2,
+       col = c("#F8766D", "#CD9600", "#7CAE00", "#00BE67",
+               "#00BFC4", "#00A9FF", "#C77CFF", "#FF61CC"))
+
+plot(data$Area, data$TP.rem, pch = 16,  cex = 2,
+     col = c("#F8766D", "#CD9600", "#7CAE00", "#00BE67",
+             "#00BFC4", "#00A9FF", "#C77CFF", "#FF61CC")[data$Wetland_ID],
+     ylab = "TP retention (kg/year",
+     xlab = "Wetland area (ha)")
+legend("bottomright", c("BL", "DY", "FE", "KE", "LL", "MA", "MO", "OH"),
+       pch = 16, pt.cex = 2,  ncol = 2,
+       col = c("#F8766D", "#CD9600", "#7CAE00", "#00BE67",
+               "#00BFC4", "#00A9FF", "#C77CFF", "#FF61CC"))
 
 
 
@@ -119,6 +184,15 @@ ggplot(data, aes(fill = Wetland_ID, y = TP.rem/Area, x = Water_year)) +
 
 
 
+
+
+
+
+
+
+
+
+### Seasonal summaries
 
 ### calcualte mass removal, percent removal and concentration (mg/L)
 rem.calcs <- flows.combine %>% 
@@ -142,18 +216,6 @@ rem.calcs <- flows.combine %>%
   mutate(PP.conc.IN = PP.IN/VOL.IN*1000) %>%
   mutate(PP.conc.OUT = PP.OUT/VOL.OUT*1000) 
 
-
-
-### Annual summaries
-
-rem.calcs[rem.calcs == -Inf] <- NaN
-rem.calcs[rem.calcs == Inf] <- NaN
-
-annual.summary <- rem.calcs %>%
-  group_by(Wetland_ID, Water_year) %>%
-  summarise(across(where(is.numeric), mean, na.rm = TRUE))
-
-### Seasonal summaries
 
 
 ### Fall = Oct, Nov, Dec; Winter = Jan, Feb, Mar; Spring = Apr, May, Jun; Summer = Jul, Aug, Sep
@@ -180,6 +242,12 @@ seasonal.summary2 <- rem.calcs %>%
   
 rm(key1, key2)
 
+
+
+
+
+
+
 ### Monthly summaries
 
 monthly.summary <- rem.calcs %>%
@@ -190,6 +258,34 @@ monthly.summary <- rem.calcs %>%
     mutate(Month = fct_relevel(Month, 
                             "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr",
                             "May", "Jun", "Jul", "Aug", "Sep", )) 
+monthly.summary <- monthly.summary  %>%
+  left_join(aux.d, by = "Wetland_ID")
+
+ms <- monthly.summary
+plot(ms$Month, ms$Precip)
+
+ms$Precip[is.nan(ms$Precip)] <- 0
+
+ggplot(ms, aes(Month, Precip)) +
+  geom_point(aes(color = "rain")) +
+  geom_point(aes(Month, TP.rem*100, color = "TP retention")) +
+  scale_y_continuous(name = "Rain", sec.axis = sec_axis(~.*0.01, name = "TP retention (kg/month")) +
+  facet_wrap(Wetland_ID ~ Water_year, scales = "free") +
+  theme(axis.text.x=element_blank())
+
+
+# ggplot(Y1, aes(Date, TP.IN)) +
+#   geom_point(aes(color = "TP in"), size = 1) + 
+#   geom_point(aes(Date, TP.OUT, color = "TP out"), size = 1)+
+#   scale_color_manual(values = c("#0000FF77", "#FF000066")) +
+#   facet_wrap(.~Wetland_ID, scales = "free" ) +
+#   scale_x_date(name = "2019", date_breaks = "1 month", 
+#                date_labels = c("S", "O", "N","D", "J", "F", "M","A", "M","J", "J", "A"))
+
+
+
+
+
 
 
 
