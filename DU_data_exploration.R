@@ -50,122 +50,8 @@ flows.combine <- x %>%
   mutate(SRP.OUT = sum(SRP_kg_day_Outflow, SRP_kg_day_Outflow_Leak, na.rm = TRUE)) %>%
   mutate(PP.IN = sum(PP_kg_day_Inflow_tile, PP_kg_day_Inflow_surface,
                            PP_kg_day_Precipitation, na.rm = TRUE)) %>%
-  mutate(PP.OUT = sum(PP_kg_day_Outflow, PP_kg_day_Outflow_Leak, na.rm = TRUE)) %>%
-  select(Wetland_ID, Date, Water_year, Month, Day, Precip, VOL.IN, VOL.OUT, TP.IN, TP.OUT,
-         TDP.IN, TDP.OUT, SRP.IN, SRP.OUT, PP.IN, PP.OUT) 
+  mutate(PP.OUT = sum(PP_kg_day_Outflow, PP_kg_day_Outflow_Leak, na.rm = TRUE)) 
 
-### breif visualization
-
-# Y1 <- flows.combine[which(flows.combine$Water_year == "2019"),]
-# Y2 <- flows.combine[which(flows.combine$Water_year == "2021"),]
-# 
-# ggplot(Y1, aes(Date, TP.IN)) +
-#   geom_point(aes(color = "TP in"), size = 1) + 
-#   geom_point(aes(Date, TP.OUT, color = "TP out"), size = 1)+
-#   scale_color_manual(values = c("#0000FF77", "#FF000066")) +
-#   facet_wrap(.~Wetland_ID, scales = "free" ) +
-#   scale_x_date(name = "2019", date_breaks = "1 month", 
-#                date_labels = c("S", "O", "N","D", "J", "F", "M","A", "M","J", "J", "A"))
-# 
-flows.combine$TP.ret <- flows.combine$TP.IN - flows.combine$TP.OUT
-flows.combine$SRP.ret <- flows.combine$SRP.IN - flows.combine$SRP.OUT
-Y1 <- flows.combine[which(flows.combine$Water_year == "2019"),]
-OH <- Y1[which(Y1$Wetland_ID == "OH"),]
-sum(OH$TP.ret)
-ggplot(OH, aes(Date, TP.IN)) +
-  geom_point(aes(color = "TP in"), size = 1) +
-  geom_point(aes(Date, TP.OUT, color = "TP out"), size = 1)+
-  scale_color_manual(values = c("#0000FF77", "#FF000066")) +
-  ylab("TP (kg/day)") 
-  # scale_x_date(name = "2019", date_breaks = "1 month",
-  #              date_labels = c("S", "O", "N","D", "J", "F", "M","A", "M","J", "J", "A"))
-
-
-we <- Y1[which(Y1$Wetland_ID == "OH"),]
-source.days <- nrow(we[which(we$SRP.ret < 0),])
-source.days
-source.days/365*100
-
-
-
-
-subset <- flows.combine %>%
-  rowwise() %>%
-  mutate(flow.atten = sum(VOL.IN, -VOL.OUT, na.rm = TRUE)) %>%
-  mutate(flow.atten.percent = flow.atten/VOL.IN*100) %>%
-  mutate(TP.rem = sum(TP.IN, -TP.OUT, na.rm = TRUE)) %>%
-  mutate(TP.rem.percent = TP.rem/TP.IN*100) %>%
-  mutate(TDP.rem = sum(TDP.IN, -TDP.OUT, na.rm = TRUE)) %>%
-  mutate(TDP.rem.percent = TDP.rem/TDP.IN*100) %>%
-  mutate(SRP.rem = sum(SRP.IN, -SRP.OUT, na.rm = TRUE)) %>%
-  mutate(SRP.rem.percent = SRP.rem/SRP.IN*100) %>%
-  mutate(PP.rem = sum(PP.IN, -PP.OUT, na.rm = TRUE)) %>%
-  mutate(PP.rem.percent = PP.rem/PP.IN*100) %>%
-  mutate(TP.conc.IN = TP.IN/VOL.IN*1000) %>%
-  mutate(TP.conc.OUT = TP.OUT/VOL.OUT*1000) %>%
-  mutate(TDP.conc.IN = TDP.IN/VOL.IN*1000) %>%
-  mutate(TDP.conc.OUT = TDP.OUT/VOL.OUT*1000) %>%
-  mutate(SRP.conc.IN = SRP.IN/VOL.IN*1000) %>%
-  mutate(SRP.conc.OUT = SRP.OUT/VOL.OUT*1000) %>%
-  mutate(PP.conc.IN = PP.IN/VOL.IN*1000) %>%
-  mutate(PP.conc.OUT = PP.OUT/VOL.OUT*1000) %>%
-  filter(Wetland_ID == "OH" | Wetland_ID == "MA" |
-           Wetland_ID == "KE" | Wetland_ID == "FE")
-
-
-
-
-ggplot(subset, aes(log(VOL.IN), SRP.rem.percent)) +
-  geom_point() +
-  ylim(-300, 100) +
-  facet_wrap(.~Wetland_ID)
-  
-
-
-
-
-
-flows.combine$Precip[is.na(flows.combine$Precip)] <- 0
-plot(flows.combine$Precip, flows.combine$TP.ret)
-fit <- lm(flows.combine$TP.ret ~ flows.combine$Precip)
-abline(fit)
-summary(fit)
-
-## 14 days of preceding rain
-n <- 14
-cs <- cumsum(flows.combine$Precip)
-flows.combine$rain.sum <- c(rep_len(NA, n-1), tail(cs, -(n-1)) - c(0, head(cs, -n)))
-
-plot(flows.combine$rain.sum, flows.combine$TP.OUT)
-fit <- lm(flows.combine$TP.ret ~ flows.combine$rain.sum)
-abline(fit)
-summary(fit)
-
-
-
-
-#### add site info
-aux.d <- read.csv("Wetland_Info.csv", head = TRUE)
-names(aux.d)[1] <- "Wetland_ID"
-names(aux.d) <- c("Wetland_ID", "Name", "Established", "Area", "Volume", "CA",
-                  "CA_WA", "Crop18", "Crop19", "Crop20", "Crop21", "SOM", "SBP", "UBP")
-annual.summary <- annual.summary  %>%
-  left_join(aux.d, by = "Wetland_ID")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### Seasonal summaries
 
 ### calcualte mass removal, percent removal and concentration (mg/L)
 rem.calcs <- flows.combine %>% 
@@ -191,60 +77,103 @@ rem.calcs <- flows.combine %>%
 
 
 
-### Fall = Oct, Nov, Dec; Winter = Jan, Feb, Mar; Spring = Apr, May, Jun; Summer = Jul, Aug, Sep
-Month <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
-           "Sep", "Oct", "Nov", "Dec")
-Season <- c("Winter", "Winter", "Winter", "Spring", "Spring", "Spring", 
-            "Summer", "Summer", "Summer", "Fall", "Fall", "Fall")
-key1 <- data.frame(Month, Season); 
-seasonal.summary1 <- rem.calcs %>%
-  left_join(key1, by = "Month") %>%
-  group_by(Wetland_ID, Water_year, Season) %>%
-  summarise(across(where(is.numeric), mean, na.rm = TRUE))
-
-  
-### Seasons 2 -- the way DUCS does it in the report
-### Fall = Oct, Nov; Winter = Dec, Jan; Freshet = Feb, Mar, Apr, May; Summer = Jun, Jul, Aug, Sep
-Season <- c("Winter", "Freshet", "Freshet", "Freshet", "Freshet", "Summer", 
-              "Summer", "Summer", "Summer", "Fall", "Fall", "Winter")
-key2 <- data.frame(Month, Season); rm(Month,Season)
-seasonal.summary2 <- rem.calcs %>%
-  left_join(key2, by = "Month") %>%
-  group_by(Wetland_ID, Water_year, Season) %>%
-  summarise(across(where(is.numeric), mean, na.rm = TRUE))
-  
-rm(key1, key2)
-
-
-
-
-
-
-
-### Monthly summaries
-
-monthly.summary <- rem.calcs %>%
-  group_by(Wetland_ID, Water_year, Month) %>%
-  mutate(max.flow = max(VOL.IN)) %>%
-  group_by(Wetland_ID, Water_year, Month) %>%
-  summarise(across(where(is.numeric), mean, na.rm = TRUE)) %>%
-    mutate(Month = fct_relevel(Month, 
-                            "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr",
-                            "May", "Jun", "Jul", "Aug", "Sep", )) 
-monthly.summary <- monthly.summary  %>%
+#### add site info
+aux.d <- read.csv("Wetland_Info.csv", head = TRUE)
+names(aux.d)[1] <- "Wetland_ID"
+names(aux.d) <- c("Wetland_ID", "Name", "Established", "Area", "Volume", "CA",
+                  "CA_WA", "Crop18", "Crop19", "Crop20", "Crop21", "SOM", "SBP", "UBP")
+data <- rem.calcs  %>%
   left_join(aux.d, by = "Wetland_ID")
 
-ms <- monthly.summary
-plot(ms$Month, ms$Precip)
+subset <- data %>%
+  filter(Wetland_ID == "OH" | Wetland_ID == "MA" |
+           Wetland_ID == "KE" | Wetland_ID == "FE")
 
-ms$Precip[is.nan(ms$Precip)] <- 0
+Y1 <- data[which(data$Water_year == "2019"),]
+Y2 <- data[which(data$Water_year == "2021"),]
 
-ggplot(ms, aes(Month, Precip)) +
-  geom_point(aes(color = "rain")) +
-  geom_point(aes(Month, TP.rem*100, color = "TP retention")) +
-  scale_y_continuous(name = "Rain", sec.axis = sec_axis(~.*0.01, name = "TP retention (kg/month")) +
-  facet_wrap(Wetland_ID ~ Water_year, scales = "free") +
-  theme(axis.text.x=element_blank())
+
+## data visualization
+
+
+ggplot(Y1, aes(Date, TP.IN)) +
+  geom_point(aes(color = "TP in"), size = 1) +
+  geom_point(aes(Date, TP.OUT, color = "TP out"), size = 1)+
+  scale_color_manual(values = c("#0000FF77", "#FF000066")) +
+  facet_wrap(.~Wetland_ID, scales = "free" ) +
+  scale_x_date(name = "2019", date_breaks = "1 month",
+               date_labels = c("S", "O", "N","D", "J", "F", "M","A", "M","J", "J", "A"))
+
+
+OH <- Y1[which(Y1$Wetland_ID == "OH"),]
+ggplot(OH, aes(Date, TP.IN)) +
+  geom_point(aes(color = "TP in"), size = 1) +
+  geom_point(aes(Date, TP.OUT, color = "TP out"), size = 1)+
+  scale_color_manual(values = c("#0000FF77", "#FF000066")) +
+  ylab("TP (kg/day)") 
+
+we <- Y1[which(Y1$Wetland_ID == "OH"),]
+source.days <- nrow(we[which(we$SRP.ret < 0),])
+source.days
+source.days/365*100
+
+ggplot(subset, aes(log(VOL.IN), SRP.rem.percent)) +
+  geom_point() +
+  ylim(-300, 100) +
+  facet_wrap(.~Wetland_ID)
+  
+
+
+
+
+## Retention ~ rainfall
+data$Precip[is.na(data$Precip)] <- 0
+plot(data$Precip, data$TP.rem)
+
+## n days of preceding rain
+n <- 30
+cs <- cumsum(data$Precip)
+data$rain.sum <- c(rep_len(NA, n-1), tail(cs, -(n-1)) - c(0, head(cs, -n)))
+plot(data$Precip, data$rain.sum)
+
+rbPal <- colorRampPalette(c('red','blue'))
+data$col <- rbPal(3)[as.numeric(cut(data$TP.rem.percent, breaks = c(-Inf, 0, 20, 500)))]
+plot(data$Precip, data$rain.sum, pch = 16, cex = 0.5, col = data$col)
+
+summary(data$TP.rem.percent)
+
+
+plot(data$rain.sum, data$TP.OUT)
+fit <- lm(flows.combine$TP.ret ~ flows.combine$rain.sum)
+abline(fit)
+summary(fit)
+plot(data$VOL.OUT, data$SRP.OUT)
+
+
+
+
+#### add site info
+aux.d <- read.csv("Wetland_Info.csv", head = TRUE)
+names(aux.d)[1] <- "Wetland_ID"
+names(aux.d) <- c("Wetland_ID", "Name", "Established", "Area", "Volume", "CA",
+                  "CA_WA", "Crop18", "Crop19", "Crop20", "Crop21", "SOM", "SBP", "UBP")
+annual.summary <- annual.summary  %>%
+  left_join(aux.d, by = "Wetland_ID")
+
+
+### Seasonal summaries
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # ggplot(Y1, aes(Date, TP.IN)) +
