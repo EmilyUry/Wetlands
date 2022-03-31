@@ -117,21 +117,22 @@ ggplot(data, aes(fill = Wetland_ID, y = SRP.rem/Area, x = Water_year)) +
 plot(data$Area, data$SRP.rem, pch = 16,  cex = 2,
      col = c("#F8766D", "#CD9600", "#7CAE00", "#00BE67",
              "#00BFC4", "#00A9FF", "#C77CFF", "#FF61CC")[data$Wetland_ID],
-     ylab = "SRP retention (kg/year",
+     ylab = "SRP retention (kg/year)",
      xlab = "Wetland area (ha)")
 legend("topright", c("BL", "DY", "FE", "KE", "LL", "MA", "MO", "OH"),
        pch = 16, pt.cex = 2,  ncol = 2,
        col = c("#F8766D", "#CD9600", "#7CAE00", "#00BE67",
                "#00BFC4", "#00A9FF", "#C77CFF", "#FF61CC"))
+abline(h=0, lty = 2)
 
 plot(data$Area, data$TP.rem, pch = 16,  cex = 2,
      col = c("#F8766D", "#CD9600", "#7CAE00", "#00BE67",
              "#00BFC4", "#00A9FF", "#C77CFF", "#FF61CC")[data$Wetland_ID],
-     ylab = "TP retention (kg/year",
+     ylab = "TP retention (kg/year)",
      xlab = "Wetland area (ha)")
 legend("bottomright", c("BL", "DY", "FE", "KE", "LL", "MA", "MO", "OH"),
-       pch = 16, pt.cex = 2,  ncol = 2,
+       pch = 16, pt.cex = 2,  ncol = 4,
        col = c("#F8766D", "#CD9600", "#7CAE00", "#00BE67",
                "#00BFC4", "#00A9FF", "#C77CFF", "#FF61CC"))
-
+abline(h=0, lty = 2)
 
