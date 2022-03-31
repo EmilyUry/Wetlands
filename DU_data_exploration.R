@@ -24,7 +24,7 @@ x <- read.csv("P_flux.csv", head = TRUE)
 ## data set-up
 x$Water_year <- as.factor(x$Water_year)
 x$Date <- as.Date(x$Date)
-
+x$Wetland_ID <- ordered(x$Wetland_ID, levels = c("MO", "BL", "MA", "KE", "DY", "LL", "FE", "OH"))
 ## merge multiple inflows and outflows for volume and solutes
 ##
 ###### inflows = Surface + Tile + Precip
@@ -79,9 +79,10 @@ rem.calcs <- flows.combine %>%
 
 #### add site info
 aux.d <- read.csv("Wetland_Info.csv", head = TRUE)
-names(aux.d)[1] <- "Wetland_ID"
 names(aux.d) <- c("Wetland_ID", "Name", "Established", "Area", "Volume", "CA",
                   "CA_WA", "Crop18", "Crop19", "Crop20", "Crop21", "SOM", "SBP", "UBP")
+aux.d$Wetland_ID <- ordered(aux.d$Wetland_ID, levels = c("MO", "BL", "MA", "KE", "DY", "LL", "FE", "OH"))
+
 data <- rem.calcs  %>%
   left_join(aux.d, by = "Wetland_ID")
 
@@ -117,11 +118,70 @@ source.days <- nrow(we[which(we$SRP.ret < 0),])
 source.days
 source.days/365*100
 
-ggplot(subset, aes(log(VOL.IN), SRP.rem.percent)) +
+
+
+
+ggplot(subset, aes(log(VOL.IN), TP.rem)) +
   geom_point() +
-  ylim(-300, 100) +
+  #ylim(-300, 100) +
   facet_wrap(.~Wetland_ID)
   
+
+rbPal <- colorRampPalette(c('red','blue'))
+subset$col <- rbPal(2)[as.numeric(cut(subset$TP.rem, breaks = c(-Inf, 0, Inf)))]
+
+subset$behav <- ifelse(subset$TP.rem < 0, "source", "sink")
+
+ggplot(subset, aes(log(VOL.IN), TP.rem, color = behav)) + 
+  scale_color_manual(values=c("#0000FF55", "#FF000055"))+
+  geom_point() +
+  #ylim(-300, 100) +
+  facet_wrap(.~Wetland_ID)
+
+
+
+
+ggplot(subset, aes(log(VOL.IN), log(TP.conc.IN), color = behav)) + 
+  scale_color_manual(values=c("#0000FF55", "#FF000055"))+
+  geom_point() +
+  #ylim(-300, 100) +
+  facet_wrap(.~Wetland_ID) +
+  xlab("log(Q)") +
+  ylab("log(C)TP")
+
+
+subset$behav <- ifelse(subset$SRP.rem < 0, "source", "sink")
+
+ggplot(subset, aes(log(VOL.IN), log(SRP.conc.IN), color = behav)) + 
+  scale_color_manual(values=c("#0000FF55", "#FF000055"))+
+  geom_point() +
+  #ylim(-300, 100) +
+  facet_wrap(.~Wetland_ID) +
+  xlab("log(Q)") +
+  ylab("log(C)SRP")
+
+
+
+
+
+ggplot(subset, aes(SRP.rem.percent, TP.rem.percent, color = behav)) + 
+  scale_color_manual(values=c("#0000FF55", "#FF000055"))+
+  geom_point() +
+  ylim(-300, 100) +
+  xlim(-250,100) +
+  facet_wrap(.~Wetland_ID) +
+  geom_abline(slope = 1, intercept = 1)
+
+
+
+
+ggplot(subset, aes(log(VOL.IN), log(TP.conc.OUT), color = behav)) + 
+  scale_color_manual(values=c("#0000FF55", "#FF000055"))+
+  geom_point() +
+  #ylim(-300, 100) +
+  facet_wrap(.~Wetland_ID) +
+  xlab("log(Q)") +
+  ylab("log(C)TP")
 
 
 
@@ -131,7 +191,7 @@ data$Precip[is.na(data$Precip)] <- 0
 plot(data$Precip, data$TP.rem)
 
 ## n days of preceding rain
-n <- 30
+n <- 60
 cs <- cumsum(data$Precip)
 data$rain.sum <- c(rep_len(NA, n-1), tail(cs, -(n-1)) - c(0, head(cs, -n)))
 plot(data$Precip, data$rain.sum)
@@ -139,6 +199,10 @@ plot(data$Precip, data$rain.sum)
 rbPal <- colorRampPalette(c('red','blue'))
 data$col <- rbPal(3)[as.numeric(cut(data$TP.rem.percent, breaks = c(-Inf, 0, 20, 500)))]
 plot(data$Precip, data$rain.sum, pch = 16, cex = 0.5, col = data$col)
+we <- data[which(data$Wetland_ID == "OH"),]
+plot(we$Precip, we$rain.sum, pch = 16, cex = 0.5, col = we$col)
+
+
 
 summary(data$TP.rem.percent)
 
@@ -151,168 +215,21 @@ plot(data$VOL.OUT, data$SRP.OUT)
 
 
 
+ggplot(Y1, aes(Date, TP.IN)) +
+  geom_point(aes(color = "TP in"), size = 1) +
+  geom_point(aes(Date, TP.OUT, color = "TP out"), size = 1)+
+  scale_color_manual(values = c("#0000FF77", "#FF000066")) +
+  facet_wrap(.~Wetland_ID, scales = "free" ) +
+  scale_x_date(name = "2019", date_breaks = "1 month",
+               date_labels = c("S", "O", "N","D", "J", "F", "M","A", "M","J", "J", "A"))
 
-#### add site info
-aux.d <- read.csv("Wetland_Info.csv", head = TRUE)
-names(aux.d)[1] <- "Wetland_ID"
-names(aux.d) <- c("Wetland_ID", "Name", "Established", "Area", "Volume", "CA",
-                  "CA_WA", "Crop18", "Crop19", "Crop20", "Crop21", "SOM", "SBP", "UBP")
-annual.summary <- annual.summary  %>%
-  left_join(aux.d, by = "Wetland_ID")
 
 
-### Seasonal summaries
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-# ggplot(Y1, aes(Date, TP.IN)) +
-#   geom_point(aes(color = "TP in"), size = 1) + 
-#   geom_point(aes(Date, TP.OUT, color = "TP out"), size = 1)+
-#   scale_color_manual(values = c("#0000FF77", "#FF000066")) +
-#   facet_wrap(.~Wetland_ID, scales = "free" ) +
-#   scale_x_date(name = "2019", date_breaks = "1 month", 
-#                date_labels = c("S", "O", "N","D", "J", "F", "M","A", "M","J", "J", "A"))
-
-
-
-table(ms$TP.rem, ms$Wetland_ID)
-
-
-
-
-#### data visualization
-
-
-OH <- monthly.summary[which(monthly.summary$Wetland_ID == "OH"),]
-plot(OH$Month, OH$TP.IN)
-
-
-flow <- ggplot(OH, aes(x = Month, y = VOL.IN)) +
-  geom_bar(stat = "identity") + 
-  facet_wrap(~Water_year)
-
-TP.in <- ggplot(OH, aes(x = Month, y = TP.IN)) +
-  geom_bar(stat = "identity") + 
-  facet_wrap(~Water_year)
-
-TP.out <- ggplot(OH, aes(x = Month, y = TP.OUT)) +
-  geom_bar(stat = "identity") + 
-  facet_wrap(~Water_year)
-
-TP.ret <- ggplot(OH, aes(x = Month, y = TP.rem.percent)) +
-  geom_bar(stat = "identity") + 
-  facet_wrap(~Water_year) +
-  coord_cartesian(ylim = c(-250,100), clip = "off")
-
-
-grid.arrange(flow, TP.in, TP.out, TP.ret, nrow = 4) 
-
-
-
-
-
-ggplot(monthly.summary, aes(x = Month, y = TP.rem.percent, group = 1)) +
-  geom_line() +
-  geom_point() +
-  facet_wrap(Wetland_ID~Water_year, scales = "free")
-
-ggplot(monthly.summary, aes(x = Month, y = SRP.rem.percent, group = 1)) +
-  geom_line() +
-  geom_point() +
-  facet_wrap(Wetland_ID~Water_year, scales = "free")
-
-
-
-ggplot(monthly.summary, aes(x = Month, y = TP.rem, group = 1)) +
-  geom_line() +
-  geom_point() +
-  facet_wrap(Wetland_ID~Water_year)
-
-ggplot(monthly.summary, aes(x = Month, y = SRP.rem, group = 1)) +
-  geom_line() +
-  geom_point() +
-  facet_wrap(Wetland_ID~Water_year)
-
-
-plot(OH$max.flow, OH$TP.rem.percent)
-
-
-ggplot(monthly.summary, aes(x = VOL.IN, y = SRP.rem.percent)) +
-  geom_point() +
-  geom_smooth(method = lm) +
-  facet_wrap(~Wetland_ID, scales = "free")
-
-
-ggplot(monthly.summary, aes(x = max.flow, y = SRP.rem.percent)) +
-  geom_point() +
-  geom_smooth(method = lm) +
-  facet_wrap(~Wetland_ID, scales = "free")
-
-
-
-
-
-
-
-## Aux data (area, catchment size, sediment P, etc.)
-
-aux.d <- read.csv("Wetland_Info.csv", head = TRUE)
-names(aux.d)[1] <- "Wetland_ID"
-names(aux.d) <- c("Wetland_ID", "Name", "Established", "Area", "Volume", "CA",
-                  "CA_WA", "Crop18", "Crop19", "Crop20", "Crop21", "SOM", "SBP", "UBP")
-
-data <- monthly.summary %>%
-  left_join(aux.d, by = "Wetland_ID")
-
-data <- annual.summary  %>%
-  left_join(aux.d, by = "Wetland_ID")
-
-data <- seasonal.summary2  %>%
-  left_join(aux.d, by = "Wetland_ID")
-
-names(data)[39]
-ggplot(data, aes(x = Contributing.Area...Wetland.Area, y = TP.IN, color = as.factor(Water_year))) +
-  geom_point() 
-
-
-
-
-
-### report summary 
-## Figure 5 
-ss <- data
-
-ggplot(ss, aes(fill = Wetland_ID, y = TP.rem/Area, x = Season)) +
-  geom_bar(position = "dodge", stat = "identity") + 
-  facet_wrap(.~ Water_year) +
-  ylab("TP retention (kg/ha)")
-ggplot(ss, aes(fill = Wetland_ID, y = TDP.rem/Area, x = Season)) +
-  geom_bar(position = "dodge", stat = "identity") + 
-  facet_wrap(.~ Water_year)+
-  ylab("TDP retention (kg/ha)")
-ggplot(ss, aes(fill = Wetland_ID, y = SRP.rem/Area, x = Season)) +
-  geom_bar(position = "dodge", stat = "identity") + 
-  facet_wrap(.~ Water_year)+
-  ylab("SRP retention (kg/ha)")
-ggplot(ss, aes(fill = Wetland_ID, y = PP.rem/Area, x = Season)) +
-  geom_bar(position = "dodge", stat = "identity") + 
-  facet_wrap(.~ Water_year)+
-  ylab("PP retention (kg/ha)")
-
-hist(ss$TP.rem)
-
-summary(ss$TP.rem)
 
 
 
