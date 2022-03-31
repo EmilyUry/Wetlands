@@ -23,6 +23,8 @@ x <- read.csv("P_flux.csv", head = TRUE)
 ## data set-up
 x$Water_year <- as.factor(x$Water_year)
 x$Date <- as.Date(x$Date)
+x$Wetland_ID <- ordered(x$Wetland_ID, levels = c("MO", "BL", "MA", "KE", "DY", "LL", "FE", "OH"))
+
 
 ## merge multiple inflows and outflows for volume and solutes
 ##
@@ -81,9 +83,9 @@ rem.calcs <- flows.combine %>%
 
 #### add site info
 aux.d <- read.csv("Wetland_Info.csv", head = TRUE)
-names(aux.d)[1] <- "Wetland_ID"
 names(aux.d) <- c("Wetland_ID", "Name", "Established", "Area", "Volume", "CA",
                   "CA_WA", "Crop18", "Crop19", "Crop20", "Crop21", "SOM", "SBP", "UBP")
+aux.d$Wetland_ID <- ordered(aux.d$Wetland_ID, levels = c("MO", "BL", "MA", "KE", "DY", "LL", "FE", "OH"))
 
 
 ### Weekly summaries
@@ -97,12 +99,14 @@ weekly.summary <- rem.calcs %>%
   group_by(Wetland_ID, Water_year, Week) %>%
   mutate(max.flow = max(VOL.IN)) %>%
   group_by(Wetland_ID, Water_year, Week) %>%
-  summarise(across(where(is.numeric), mean, na.rm = TRUE))
+  summarise(across(where(is.numeric), c(median, sd), na.rm = TRUE))
 
 weekly.summary <- weekly.summary  %>%
   left_join(aux.d, by = "Wetland_ID")
 
-
+subset <- weekly.summary %>%
+  filter(Wetland_ID == "OH" | Wetland_ID == "MA" |
+           Wetland_ID == "KE" | Wetland_ID == "FE")
 
 
 
@@ -110,16 +114,41 @@ weekly.summary <- weekly.summary  %>%
 
 ############ data visualization
 
-ws <- weekly.summary
+ws <- subset
+# ws["TP.rem.percent"][ws["TP.rem.percent"] == "-Inf"] <- NaN
+# ws["SRP.rem.percent"][ws["SRP.rem.percent"] == "-Inf"] <- NaN
+
+ws$behav <- ifelse(ws$TP.rem.percent_1 < 0, "source", "sink")
 
 
-
-ggplot(ws, aes(x = Week, y = TP.rem.percent, group = 1)) +
+ggplot(ws, aes(x = Week, y = TP.rem.percent_1, group = 1, color = behav)) +
   geom_line() +
   geom_point() +
-  facet_wrap(Wetland_ID~Water_year, scales = "free") +
+  geom_errorbar(aes(ymin = TP.rem.percent_1 - TP.rem.percent_2,
+                    ymax = TP.rem.percent_1 + TP.rem.percent_2)) +
+  scale_color_manual(values=c("#0000FF99", "#FF000099")) +
+  facet_wrap(Wetland_ID~Water_year, nrow = 4, scales = "free") +
   scale_x_continuous(" ", breaks = c(0, 10, 20, 30, 40, 50), 
-                       label = c("Oct", "Dec", "Feb", "Apr", "Jun", "Aug"))
+                       label = c("Oct", "Dec", "Feb", "Apr", "Jun", "Aug"))+
+  ylab("TP removal (%)")
+
+
+
+ws$behav <- ifelse(ws$SRP.rem.percent < 0, "source", "sink")
+ggplot(ws, aes(x = Week, y = SRP.rem.percent, group = 1, color = behav)) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values=c("#0000FF99", "#FF000099")) +
+  facet_wrap(Wetland_ID~Water_year, nrow = 4, scales = "free") +
+  scale_x_continuous(" ", breaks = c(0, 10, 20, 30, 40, 50), 
+                     label = c("Oct", "Dec", "Feb", "Apr", "Jun", "Aug"))+
+  ylab("SRP removal (%)")
+
+
+
+
+
+
 
 ggplot(ws, aes(x = Week, y = SRP.rem.percent, group = 1)) +
   geom_line() +
