@@ -99,7 +99,7 @@ weekly.summary <- rem.calcs %>%
   group_by(Wetland_ID, Water_year, Week) %>%
   mutate(max.flow = max(VOL.IN)) %>%
   group_by(Wetland_ID, Water_year, Week) %>%
-  summarise(across(where(is.numeric), c(median, sd), na.rm = TRUE))
+  summarise(across(where(is.numeric), median, na.rm = TRUE))
 
 weekly.summary <- weekly.summary  %>%
   left_join(aux.d, by = "Wetland_ID")
@@ -118,14 +118,12 @@ ws <- subset
 # ws["TP.rem.percent"][ws["TP.rem.percent"] == "-Inf"] <- NaN
 # ws["SRP.rem.percent"][ws["SRP.rem.percent"] == "-Inf"] <- NaN
 
-ws$behav <- ifelse(ws$TP.rem.percent_1 < 0, "source", "sink")
+ws$behav <- ifelse(ws$TP.rem.percent < 0, "source", "sink")
 
 
-ggplot(ws, aes(x = Week, y = TP.rem.percent_1, group = 1, color = behav)) +
+ggplot(ws, aes(x = Week, y = TP.rem.percent, group = 1, color = behav)) +
   geom_line() +
   geom_point() +
-  geom_errorbar(aes(ymin = TP.rem.percent_1 - TP.rem.percent_2,
-                    ymax = TP.rem.percent_1 + TP.rem.percent_2)) +
   scale_color_manual(values=c("#0000FF99", "#FF000099")) +
   facet_wrap(Wetland_ID~Water_year, nrow = 4, scales = "free") +
   scale_x_continuous(" ", breaks = c(0, 10, 20, 30, 40, 50), 
