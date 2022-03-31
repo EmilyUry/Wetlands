@@ -103,6 +103,8 @@ seasonal.summary1 <- rem.calcs %>%
 ### Fall = Oct, Nov; Winter = Dec, Jan; Freshet = Feb, Mar, Apr, May; Summer = Jun, Jul, Aug, Sep
 Season <- c("Winter", "Freshet", "Freshet", "Freshet", "Freshet", "Summer", 
             "Summer", "Summer", "Summer", "Fall", "Fall", "Winter")
+Month <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
+           "Sep", "Oct", "Nov", "Dec")
 key2 <- data.frame(Month, Season); rm(Month,Season)
 seasonal.summary2 <- rem.calcs %>%
   left_join(key2, by = "Month") %>%
@@ -114,7 +116,26 @@ rm(key1, key2)
 
 
 
+ss <- seasonal.summary2
 
+ggplot(ss, aes(fill = Wetland_ID, y = TP.rem/Area, x = Season)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  facet_wrap(.~ Water_year) +
+  ylab("TP retention (kg/ha)")
+ggplot(ss, aes(fill = Wetland_ID, y = TDP.rem/Area, x = Season)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  facet_wrap(.~ Water_year)+
+  ylab("TDP retention (kg/ha)")
+ggplot(ss, aes(fill = Wetland_ID, y = SRP.rem/Area, x = Season)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  facet_wrap(.~ Water_year)+
+  ylab("SRP retention (kg/ha)")
+ggplot(ss, aes(fill = Wetland_ID, y = PP.rem/Area, x = Season)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  facet_wrap(.~ Water_year)+
+  ylab("PP retention (kg/ha)")
+
+hist(ss$TP.rem)
 
 
 
