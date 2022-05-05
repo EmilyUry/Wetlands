@@ -18,12 +18,9 @@ library(tidyverse)
 library(viridis)
 library(gridExtra)
 
-x <- read.csv("P_flux.csv", head = TRUE)
+x <- read.csv("DU_summary_select.csv", head = TRUE)
 
 ## data set-up
-x$Water_year <- as.factor(x$Water_year)
-x$Date <- as.Date(x$Date)
-x$Wetland_ID <- ordered(x$Wetland_ID, levels = c("MO", "BL", "MA", "KE", "DY", "LL", "FE", "OH"))
 
 
 ## merge multiple inflows and outflows for volume and solutes
@@ -31,61 +28,29 @@ x$Wetland_ID <- ordered(x$Wetland_ID, levels = c("MO", "BL", "MA", "KE", "DY", "
 ###### inflows = Surface + Tile + Precip
 ###### outflows = Outflow + Outflow Leak (FE only)
 
-flows.combine <- x %>%
-  pivot_wider(names_from = Station, 
-              values_from = c(Flow_volume_m3, TP_kg_day, TDP_kg_day, 
-                              SRP_kg_day, PP_kg_day)) %>%
-  rowwise() %>%
-  mutate(Precip = Flow_volume_m3_Precipitation) %>%
-  mutate(VOL.IN = sum(Flow_volume_m3_Inflow_tile, Flow_volume_m3_Inflow_surface, 
-                      Flow_volume_m3_Precipitation, na.rm = TRUE)) %>%
-  mutate(VOL.OUT = sum(Flow_volume_m3_Outflow, Flow_volume_m3_Outflow_Leak, na.rm = TRUE)) %>%
-  mutate(TP.IN = sum(TP_kg_day_Inflow_tile, TP_kg_day_Inflow_surface,
-                     TP_kg_day_Precipitation, na.rm = TRUE)) %>%
-  mutate(TP.OUT = sum(TP_kg_day_Outflow, TP_kg_day_Outflow_Leak, na.rm = TRUE)) %>%
-  mutate(TDP.IN = sum(TDP_kg_day_Inflow_tile, TDP_kg_day_Inflow_surface,
-                      TDP_kg_day_Precipitation, na.rm = TRUE)) %>%
-  mutate(TDP.OUT = sum(TDP_kg_day_Outflow, TDP_kg_day_Outflow_Leak, na.rm = TRUE)) %>%  
-  mutate(SRP.IN = sum(SRP_kg_day_Inflow_tile, SRP_kg_day_Inflow_surface,
-                      SRP_kg_day_Precipitation, na.rm = TRUE)) %>%
-  mutate(SRP.OUT = sum(SRP_kg_day_Outflow, SRP_kg_day_Outflow_Leak, na.rm = TRUE)) %>%
-  mutate(PP.IN = sum(PP_kg_day_Inflow_tile, PP_kg_day_Inflow_surface,
-                     PP_kg_day_Precipitation, na.rm = TRUE)) %>%
-  mutate(PP.OUT = sum(PP_kg_day_Outflow, PP_kg_day_Outflow_Leak, na.rm = TRUE))
-# select(Wetland_ID, Date, Water_year, Month, Day, Precip, VOL.IN, VOL.OUT, TP.IN, TP.OUT,
-#        TDP.IN, TDP.OUT, SRP.IN, SRP.OUT, PP.IN, PP.OUT) 
-
 
 
 
 ### calcualte mass removal, percent removal and concentration (mg/L)
-rem.calcs <- flows.combine %>% 
+rem.calcs <- x %>% 
   rowwise() %>%
-  mutate(flow.atten = sum(VOL.IN, -VOL.OUT, na.rm = TRUE)) %>%
-  mutate(flow.atten.percent = flow.atten/VOL.IN*100) %>%
-  mutate(TP.rem = sum(TP.IN, -TP.OUT, na.rm = TRUE)) %>%
-  mutate(TP.rem.percent = TP.rem/TP.IN*100) %>%
-  mutate(TDP.rem = sum(TDP.IN, -TDP.OUT, na.rm = TRUE)) %>%
-  mutate(TDP.rem.percent = TDP.rem/TDP.IN*100) %>%
-  mutate(SRP.rem = sum(SRP.IN, -SRP.OUT, na.rm = TRUE)) %>%
-  mutate(SRP.rem.percent = SRP.rem/SRP.IN*100) %>%
-  mutate(PP.rem = sum(PP.IN, -PP.OUT, na.rm = TRUE)) %>%
-  mutate(PP.rem.percent = PP.rem/PP.IN*100) %>%
-  mutate(TP.conc.IN = TP.IN/VOL.IN*1000) %>%
-  mutate(TP.conc.OUT = TP.OUT/VOL.OUT*1000) %>%
-  mutate(TDP.conc.IN = TDP.IN/VOL.IN*1000) %>%
-  mutate(TDP.conc.OUT = TDP.OUT/VOL.OUT*1000) %>%
-  mutate(SRP.conc.IN = SRP.IN/VOL.IN*1000) %>%
-  mutate(SRP.conc.OUT = SRP.OUT/VOL.OUT*1000) %>%
-  mutate(PP.conc.IN = PP.IN/VOL.IN*1000) %>%
-  mutate(PP.conc.OUT = PP.OUT/VOL.OUT*1000) 
+  mutate(flow.atten = sum(Qin, -Qout, na.rm = TRUE)) %>%
+  mutate(flow.atten.percent = flow.atten/Qin*100) %>%
+  mutate(TP.rem = sum(TPin, -TPout, na.rm = TRUE)) %>%
+  mutate(TP.rem.percent = TP.rem/TPin*100) %>%
+  mutate(SRP.rem = sum(SRPin, -SRPout, na.rm = TRUE)) %>%
+  mutate(SRP.rem.percent = SRP.rem/SRPin*100) %>%
+  mutate(cTPin = TPin/Qin*1000) %>%
+  mutate(cTPout = TPout/Qout*1000) %>%
+  mutate(cSRPin= SRPin/Qin*1000) %>%
+  mutate(cSRPout = SRPout/Qout*1000)
+
 
 
 #### add site info
 aux.d <- read.csv("Wetland_Info.csv", head = TRUE)
 names(aux.d) <- c("Wetland_ID", "Name", "Established", "Area", "Volume", "CA",
                   "CA_WA", "Crop18", "Crop19", "Crop20", "Crop21", "SOM", "SBP", "UBP")
-aux.d$Wetland_ID <- ordered(aux.d$Wetland_ID, levels = c("MO", "BL", "MA", "KE", "DY", "LL", "FE", "OH"))
 
 
 ### Weekly summaries
@@ -97,7 +62,7 @@ rem.calcs$Week <- Week
 
 weekly.summary <- rem.calcs %>%
   group_by(Wetland_ID, Water_year, Week) %>%
-  mutate(max.flow = max(VOL.IN)) %>%
+  mutate(max.flow = max(Qin)) %>%
   group_by(Wetland_ID, Water_year, Week) %>%
   summarise(across(where(is.numeric), median, na.rm = TRUE))
 
@@ -109,7 +74,8 @@ subset <- weekly.summary %>%
            Wetland_ID == "KE" | Wetland_ID == "FE")
 
 
-
+subset <- weekly.summary %>%
+  filter(Water_year == 2019)
 
 
 ############ data visualization
@@ -119,13 +85,11 @@ ws <- subset
 # ws["SRP.rem.percent"][ws["SRP.rem.percent"] == "-Inf"] <- NaN
 
 ws$behav <- ifelse(ws$TP.rem.percent < 0, "source", "sink")
-
-
 ggplot(ws, aes(x = Week, y = TP.rem.percent, group = 1, color = behav)) +
   geom_line() +
   geom_point() +
   scale_color_manual(values=c("#0000FF99", "#FF000099")) +
-  facet_wrap(Wetland_ID~Water_year, nrow = 4, scales = "free") +
+  facet_wrap(.~Wetland_ID, nrow = 4, scales = "free") +
   scale_x_continuous(" ", breaks = c(0, 10, 20, 30, 40, 50), 
                        label = c("Oct", "Dec", "Feb", "Apr", "Jun", "Aug"))+
   ylab("TP removal (%)")
@@ -137,11 +101,60 @@ ggplot(ws, aes(x = Week, y = SRP.rem.percent, group = 1, color = behav)) +
   geom_line() +
   geom_point() +
   scale_color_manual(values=c("#0000FF99", "#FF000099")) +
-  facet_wrap(Wetland_ID~Water_year, nrow = 4, scales = "free") +
+  facet_wrap(.~Wetland_ID, nrow = 4, scales = "free") +
   scale_x_continuous(" ", breaks = c(0, 10, 20, 30, 40, 50), 
                      label = c("Oct", "Dec", "Feb", "Apr", "Jun", "Aug"))+
   ylab("SRP removal (%)")
 
+
+
+#### mass removal
+ws$behav <- ifelse(ws$TP.rem < 0, "source", "sink")
+ggplot(ws, aes(x = Week, y = TP.rem, group = 1, color = behav)) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values=c("#0000FF99", "#FF000099")) +
+  facet_wrap(.~Wetland_ID, nrow = 4, scales = "free") +
+  scale_x_continuous(" ", breaks = c(0, 10, 20, 30, 40, 50), 
+                     label = c("Oct", "Dec", "Feb", "Apr", "Jun", "Aug"))+
+  ylab("TP removal (kg/day)")
+
+
+
+ws$behav <- ifelse(ws$SRP.rem < 0, "source", "sink")
+ggplot(ws, aes(x = Week, y = SRP.rem, group = 1, color = behav)) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values=c("#0000FF99", "#FF000099")) +
+  facet_wrap(.~Wetland_ID, nrow = 4, scales = "free") +
+  scale_x_continuous(" ", breaks = c(0, 10, 20, 30, 40, 50), 
+                     label = c("Oct", "Dec", "Feb", "Apr", "Jun", "Aug"))+
+  ylab("SRP removal (kg/day)")
+
+
+
+
+
+
+
+
+
+
+MA <- weekly.summary %>%
+  filter(Wetland_ID == "MA")
+MA$behav <- ifelse(MA$SRP.rem < 0, "source", "sink")
+ggplot(MA, aes(x = (Qin), y = SRP.rem, group = 1, color = behav)) +
+  geom_point() +
+  scale_color_manual(values=c("#0000FF99", "#FF000099")) +
+  ylab("SRP removal (kg/day)") +
+  xlab("Q inflow")
+
+
+ggplot(MA, aes(x = (cSRPin), y = SRP.rem, group = 1, color = behav)) +
+  geom_point() +
+  scale_color_manual(values=c("#0000FF99", "#FF000099")) +
+  ylab("SRP removal (kg/day)") +
+  xlab("Inflow SRP concentration (mg/L)")
 
 
 
