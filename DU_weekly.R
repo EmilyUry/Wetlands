@@ -75,7 +75,7 @@ subset <- weekly.summary %>%
 
 
 subset <- weekly.summary %>%
-  filter(Water_year == 2019)
+  filter(Water_year == 2021)
 
 
 ############ data visualization
@@ -133,6 +133,16 @@ ggplot(ws, aes(x = Week, y = SRP.rem, group = 1, color = behav)) +
 
 
 
+
+### flow
+ggplot(ws, aes(x = Week, y = Qin, group = 1, color = behav)) +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values=c("#55555599", "#55555599")) +
+  facet_wrap(.~Wetland_ID, nrow = 4, scales = "free") +
+  scale_x_continuous(" ", breaks = c(0, 10, 20, 30, 40, 50), 
+                     label = c("Oct", "Dec", "Feb", "Apr", "Jun", "Aug"))+
+  ylab("Inflow volume (m3/day)")
 
 
 
